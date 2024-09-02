@@ -1,0 +1,25 @@
+whatsapp/
+│
+├── config/
+|       └── config.json
+├── models/
+|       └── index.js
+|       └── receiver.js
+|
+├── src/
+│   ├── controllers/
+│   │   └── appointmentController.js
+│   │
+│   ├── routes/
+│   │   └── appointmentController.js
+│   │
+│   ├── app.js
+│   └── server.js
+│
+├──tests/
+|    └── app.test.js
+│
+├── package.json
+└── Dockerfile
+└── Docker-compose.yml
+└── README.md

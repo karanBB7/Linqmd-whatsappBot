@@ -1,0 +1,27 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "AU1Fx^3l**qBh7R",
+    "database": "linqmd",
+    "host": "beosports-dbinstance.cbblgy5t5vsd.ap-south-1.rds.amazonaws.com",
+    "dialect": "postgres",
+    "port": 5432,
+    "logging": false
+  },
+  "test": {
+    "username": "postgres",
+    "password": "root",
+    "database": "whatsappbot",
+    "host": "127.0.0.1",
+    "dialect": "postgres",
+    "logging": false
+  },
+  "production": {
+    "username": "postgres",
+    "password": "root",
+    "database": "whatsappbot",
+    "host": "127.0.0.1",
+    "dialect": "postgres",
+    "logging": false
+  }
+}

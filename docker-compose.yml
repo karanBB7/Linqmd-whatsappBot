@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: whatsappbot_app
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=beosports-dbinstance.cbblgy5t5vsd.ap-south-1.rds.amazonaws.com
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=AU1Fx^3l**qBh7R
+      - DB_DATABASE=linqmd
+      - DB_DIALECT=postgres
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    networks:
+      - whatsappbot_network
+
+  db:
+    image: postgres:14
+    container_name: whatsappbot
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: whatsappbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - whatsappbot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  whatsappbot_network:

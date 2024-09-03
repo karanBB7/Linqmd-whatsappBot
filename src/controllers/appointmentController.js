@@ -44,35 +44,39 @@ async function handleIncomingMessage(message) {
 }
 
 async function handleInitialMessage(fromNumber) {
-  const appointmentData = await checkAppointment(fromNumber);
-  
-  if (appointmentData.success === 'true') {
-    const token = createToken(appointmentData.Username, fromNumber);
-    console.log("token", token);
+  try {
+    const appointmentData = await checkAppointment(fromNumber);
+    
+    if (appointmentData.success === 'true') {
+      const token = createToken(appointmentData.Username, fromNumber);
+      console.log("token", token);
 
-    const date = DateTime.fromISO(appointmentData.date);
-    const formattedDate = date.toFormat('cccc d LLLL');
+      const date = DateTime.fromISO(appointmentData.date);
+      const formattedDate = date.toFormat('cccc d LLLL');
 
-    if (appointmentData.appointment_tense === 'future') {
-      const message = `Dear ${appointmentData.patient_name}, You have an appointment with ${appointmentData.Docfullname} at ${appointmentData.clinic_name} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
-      await sendWhatsAppMessage(fromNumber, message);
-
-      const listMessage = {
-        title: 'Do you want to?',
-        body: 'Please select the respective activity.',
-        options: ['View Appointment', 'Cancel Appointment']
-      };
-      await sendListMessage(fromNumber, listMessage);
-      setUserState(fromNumber, 'awaitingSelection');
-
-  } else {
-      const message = `Dear ${appointmentData.patient_name}, You previously visited ${appointmentData.Docfullname} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
-      await sendWhatsAppMessage(fromNumber, message);
-  }
-  
-  } else {
-    await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
-    clearUserState(fromNumber);
+      if (appointmentData.appointment_tense === 'future') {
+        const message = `Dear ${appointmentData.patient_name}, You have an appointment with ${appointmentData.Docfullname} at ${appointmentData.clinic_name} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
+        
+        await sendWhatsAppMessage(fromNumber, message);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const listMessage = {
+          title: 'Do you want to?',
+          body: 'Please select the respective activity.',
+          options: ['View Appointment', 'Cancel Appointment']
+        };
+        await sendListMessage(fromNumber, listMessage);
+        
+        setUserState(fromNumber, 'awaitingSelection');
+      } else {
+        const message = `Dear ${appointmentData.patient_name}, You previously visited ${appointmentData.Docfullname} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
+        await sendWhatsAppMessage(fromNumber, message);
+      }
+    } else {
+      await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
+    }
+  } catch (error) {
+    console.error('Error in handleInitialMessage:', error);
+    await sendWhatsAppMessage(fromNumber, "An error occurred while processing your request. Please try again later.");
   }
 }
 
@@ -95,7 +99,6 @@ async function handleSelection(fromNumber, listid) {
 async function handleUnknownOption(fromNumber) {
   await sendWhatsAppMessage(fromNumber, "Unknown option. Please try again.");
   clearUserState(fromNumber);
-  // await handleInitialMessage(fromNumber);
 }
 
 module.exports = { handleIncomingMessage };

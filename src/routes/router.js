@@ -1,4 +1,5 @@
 const { processMessage } = require('../services/messageService');
+const rabbitmq = require('../config/rabbitmq');
 
 module.exports = function(app) {
   app.post('/api/appointment/incoming-message', (req, res, next) => {
@@ -8,10 +9,7 @@ module.exports = function(app) {
       return next();
     }
     
-    // Process the message asynchronously
-    processMessage(id).catch(error => {
-      console.error('Error processing message:', error);
-    });
+    rabbitmq.sendToQueue('incoming_messages', { id });
 
     res.send(202, { message: 'Message queued for processing' });
     next();

@@ -6,7 +6,7 @@ const { clearUserState } = require('../services/stateManager');
 async function handleViewAppointment(fromNumber) {
     try {
       const appointmentData = await viewAppointment(fromNumber);
-      console.log('View Appointment Response:', appointmentData);
+      // console.log('View Appointment Response:', appointmentData);
   
       let message = '';
   
@@ -58,4 +58,16 @@ async function handleViewAppointment(fromNumber) {
     }
   }
 
-  module.exports = { handleViewAppointment };
+
+  async function otherAppointments(fromNumber) {
+    const appointmentData = await viewAppointment(fromNumber);
+    if (appointmentData && appointmentData.booking_data.length > 0) {
+        return true; 
+    } else {
+        return false;
+    }
+  }
+
+
+
+  module.exports = { handleViewAppointment, otherAppointments };

@@ -6,9 +6,9 @@ const WHATSAPP_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJPd25lck5hbWU
 
 async function sendWhatsAppMessage(phone, message) {
   try {
-    console.log(`Queueing WhatsApp message for ${phone}`);
+    // console.log(`Queueing WhatsApp message for ${phone}`);
     await rabbitmq.sendToQueue('outgoing_messages', { phone, message, type: 'text' });
-    console.log(`Message queued for sending to ${phone}`);
+    // console.log(`Message queued for sending to ${phone}`);
   } catch (error) {
     console.error('Error queueing WhatsApp message:', error);
     throw error;
@@ -17,7 +17,7 @@ async function sendWhatsAppMessage(phone, message) {
 
 async function sendListMessage(phone, listMessage) {
   try {
-    console.log(`Queueing WhatsApp list message for ${phone}`);
+    // console.log(`Queueing WhatsApp list message for ${phone}`);
     const formattedListMessage = {
       type: "interactive",
       interactive: {
@@ -44,12 +44,53 @@ async function sendListMessage(phone, listMessage) {
       }
     };
     await rabbitmq.sendToQueue('outgoing_messages', { phone, message: formattedListMessage, type: 'list' });
-    console.log(`Interactive message queued for sending to ${phone}`);
+    // console.log(`Interactive message queued for sending to ${phone}`);
   } catch (error) {
     console.error('Error queueing WhatsApp list message:', error);
     throw error;
   }
 }
+
+
+async function sendFeedbackRating(phone, listMessage) {
+  try {
+    // console.log(`Queueing WhatsApp list message for ${phone}`);
+    const formattedListMessage = {
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: {
+          type: "text",
+          text: listMessage.title
+        },
+        body: {
+          text: listMessage.body
+        },
+        action: {
+          button: "Select",
+          sections: [
+            {
+              title: "Options",
+              rows: listMessage.options.map((option) => ({
+                id: option.id,
+                title: option.title,
+                description: option.description
+              }))
+            }
+          ]
+        }
+      }
+    };
+    await rabbitmq.sendToQueue('outgoing_messages', { phone, message: formattedListMessage, type: 'list' });
+    // console.log(`Interactive message queued for sending to ${phone}`);
+  } catch (error) {
+    console.error('Error queueing WhatsApp list message:', error);
+    throw error;
+  }
+}
+
+
+
 
 async function sendCancellationDatesList(phone, listMessage) {
   try {
@@ -136,6 +177,7 @@ function startOutgoingMessageConsumer() {
 module.exports = { 
   sendWhatsAppMessage, 
   sendListMessage, 
+  sendFeedbackRating,
   sendCancellationDatesList, 
   startOutgoingMessageConsumer 
 };

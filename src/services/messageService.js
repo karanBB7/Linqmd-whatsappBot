@@ -9,7 +9,7 @@ async function processMessage(messageId) {
     });
 
     if (message) {
-      console.log(`Processing message: ${message.id}`);
+      // console.log(`Processing message: ${message.id}`);
       await message.update({ status: 1 }); 
 
       rabbitmq.sendToQueue('incoming_messages', {
@@ -19,7 +19,7 @@ async function processMessage(messageId) {
         listid: message.listid
       });
 
-      console.log(`Message ${message.id} sent to queue`);
+      console.log(`Message with id ${message.id} sent to queue`);
 
       await handleIncomingMessage(message);
       await message.update({ status: 3 }); 
@@ -51,7 +51,7 @@ async function processAllPendingMessages() {
 function startMessageConsumer() {
   rabbitmq.consume('incoming_messages', async (message) => {
     try {
-      console.log('Received message from queue:', message);
+      // console.log('Received message from queue:');
     } catch (error) {
       console.error('Error handling message from queue:', error);
     }

@@ -1,5 +1,6 @@
 const { Receiver } = require('../../models');
 const { handleIncomingMessage } = require('../controllers/appointmentController');
+const rabbitmq = require('../config/rabbitmq');
 
 async function processMessage(messageId) {
   try {
@@ -10,8 +11,18 @@ async function processMessage(messageId) {
     if (message) {
       console.log(`Processing message: ${message.id}`);
       await message.update({ status: 1 }); 
+
+      rabbitmq.sendToQueue('incoming_messages', {
+        id: message.id,
+        fromNumber: message.fromNumber,
+        messages: message.messages,
+        listid: message.listid
+      });
+
+      console.log(`Message ${message.id} sent to queue`);
+
       await handleIncomingMessage(message);
-      await message.update({ status: 3 }); // Mark as processed
+      await message.update({ status: 3 }); 
       console.log(`Message ${message.id} processed successfully`);
     } else {
       console.log(`No message found with id ${messageId} and status 0`);
@@ -29,7 +40,6 @@ async function processAllPendingMessages() {
       order: [['createdAt', 'ASC']]
     });
 
-
     for (const message of pendingMessages) {
       await processMessage(message.id);
     }
@@ -38,4 +48,14 @@ async function processAllPendingMessages() {
   }
 }
 
-module.exports = { processMessage, processAllPendingMessages };
+function startMessageConsumer() {
+  rabbitmq.consume('incoming_messages', async (message) => {
+    try {
+      console.log('Received message from queue:', message);
+    } catch (error) {
+      console.error('Error handling message from queue:', error);
+    }
+  });
+}
+
+module.exports = { processMessage, processAllPendingMessages, startMessageConsumer };

@@ -1,7 +1,9 @@
 const restify = require('restify');
-const { sequelize, Tokens, Receiver } = require('../models'); // Correctly import sequelize and models
+const { sequelize } = require('../models');
 const appointmentRoutes = require('./routes/router');
-const { processAllPendingMessages } = require('./services/messageService');
+const { processAllPendingMessages, startMessageConsumer } = require('./services/messageService');
+const rabbitmq = require('./config/rabbitmq');
+const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
 
 const app = restify.createServer();
 
@@ -11,17 +13,30 @@ appointmentRoutes(app);
 
 sequelize.sync({ alter: true });
 
+(async function() {
+  try {
+    await rabbitmq.connect();
+    await rabbitmq.createQueue('incoming_messages');
+    await rabbitmq.createQueue('outgoing_messages');
 
-app.listen(3001, () => {
-  console.log('Server is running on http://localhost:3001');
-  
-  setInterval(async () => {
-    try {
-      await processAllPendingMessages();
-    } catch (error) {
-      console.error('Error processing pending messages:', error);
-    }
-  }, 1000);
-});
+    startMessageConsumer();
+    startOutgoingMessageConsumer();
+
+    app.listen(3001, () => {
+      console.log('Server is running on http://localhost:3001');
+      
+      setInterval(async () => {
+        try {
+          await processAllPendingMessages();
+        } catch (error) {
+          console.error('Error processing pending messages:', error);
+        }
+      }, 500);
+    });
+  } catch (error) {
+    console.error('Failed to initialize application:', error);
+    process.exit(1);
+  }
+})();
 
 module.exports = app;

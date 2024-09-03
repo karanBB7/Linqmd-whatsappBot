@@ -5,9 +5,38 @@ const { DateTime } = require('luxon');
 const { setUserState, getUserState, clearUserState } = require('../services/stateManager');
 
 
+
 const { handleCancelAppointment, handleDropStatus } = require('../handllers/cancelHandler');
-const { handleViewAppointment } = require('../handllers/viewHandlers');
+const { handleViewAppointment, otherAppointments } = require('../handllers/viewHandlers');
 const { handleFeedback, captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
+
+const commandHandlers = {
+  initial: async (fromNumber, listid) => {
+    return listid === null ? handleInitialMessage(fromNumber) : handleUnknownOption(fromNumber);
+  },
+  awaitingSelection: handleSelection,
+  viewingAppointment: handleViewAppointment,
+  cancellingAppointment: handleCancelAppointment,
+  awaitingCancellationConfirmation: async (fromNumber, listid) => {
+    return listid ? handleDropStatus(fromNumber, listid) : handleUnknownOption(fromNumber);
+  },
+  giveusyourfeedback: async (fromNumber) => {
+    const token = getUserToken(fromNumber);
+    return handleFeedback(fromNumber, token);
+  },
+  captureFeedback: async (fromNumber, listid, messages) => {
+    return listid === null ? captureFeedback(fromNumber, messages) : handleUnknownOption(fromNumber);
+  },
+  captureReasonForVisit: async (fromNumber, listid, messages) => {
+    return listid === null ? captureReasonForVisit(fromNumber, messages) : handleUnknownOption(fromNumber);
+  },
+  captureOvercome: async (fromNumber, listid, messages) => {
+    return listid === null ? captureOvercome(fromNumber, messages) : handleUnknownOption(fromNumber);
+  },
+  captureRating: async (fromNumber, listid) => {
+    return listid ? captureRating(fromNumber, listid) : handleUnknownOption(fromNumber);
+  }
+};
 
 async function handleIncomingMessage(message) {
   const { fromNumber, messages, listid } = message;
@@ -16,65 +45,8 @@ async function handleIncomingMessage(message) {
   console.log(`${fromNumber}. Current state: ${currentState}, listid: ${listid}`);
 
   try {
-    switch (currentState) {
-      case 'initial':
-        if (listid === null ) {
-          await handleInitialMessage(fromNumber);
-        } else {
-          await handleUnknownOption(fromNumber);
-        }
-        break;
-      case 'awaitingSelection':
-        await handleSelection(fromNumber, listid);
-        break;
-      case 'viewingAppointment':
-        await handleViewAppointment(fromNumber);
-        break;
-      case 'cancellingAppointment':
-        await handleCancelAppointment(fromNumber);
-        break;
-      case 'awaitingCancellationConfirmation':
-        if (listid) {
-          await handleDropStatus(fromNumber, listid);
-        } else {
-          await handleUnknownOption(fromNumber);
-        }
-        break;
-      case 'giveusyourfeedback':
-        const token = getUserToken(fromNumber);
-        await handleFeedback(fromNumber, token);
-        break;
-      case 'captureFeedback':
-        if (listid === null ) {
-          await captureFeedback(fromNumber, messages);
-        } else {
-          await handleUnknownOption(fromNumber);
-        }
-        break;
-      case 'captureReasonForVisit':
-        if (listid === null ) {
-          await captureReasonForVisit(fromNumber, messages);
-        } else {
-          await handleUnknownOption(fromNumber);
-        }
-        break;
-      case 'captureOvercome':
-        if (listid === null ) {
-          await captureOvercome(fromNumber, messages);
-        } else {
-          await handleUnknownOption(fromNumber);
-        }
-        break;
-      case 'captureRating':
-        if (listid) {
-          await captureRating(fromNumber, listid);
-        } else {
-          await handleUnknownOption(fromNumber);
-        }
-        break;
-      default:
-        await handleUnknownOption(fromNumber);
-    }
+    const handler = commandHandlers[currentState] || handleUnknownOption;
+    await handler(fromNumber, listid, messages);
   } catch (error) {
     console.error(`Error processing message for ${fromNumber}:`, error);
     await sendWhatsAppMessage(fromNumber, "Sorry, an error occurred. Please try again.");
@@ -108,20 +80,11 @@ async function handleInitialMessage(fromNumber) {
         await sendListMessage(fromNumber, listMessage);
         
         setUserState(fromNumber, 'awaitingSelection');
+
       } else {
         const message = `Dear ${appointmentData.patient_name}, You previously visited ${appointmentData.Docfullname} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
         await sendWhatsAppMessage(fromNumber, message);
-
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const listMessage = {
-          title: 'Do you want to?',
-          body: 'Please select the respective activity.',
-          options: ['Give us your feedback']
-        };
-        await sendListMessage(fromNumber, listMessage);
-        setUserState(fromNumber, 'awaitingSelection');
-
+        await handleOtherAppointments(fromNumber);
       }
     } else {
       await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
@@ -132,6 +95,29 @@ async function handleInitialMessage(fromNumber) {
   }
 }
 
+
+async function handleOtherAppointments(fromNumber) {
+  try {
+    const checkforotherappointments = await otherAppointments(fromNumber);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const listMessage = checkforotherappointments ? {
+      title: 'Do you want to?',
+      body: 'Please select the respective activity.',
+      options: ['Give us your feedback', 'View Appointment', 'Cancel Appointment']
+    } : {
+      title: 'Do you want to?',
+      body: 'Please select the respective activity.',
+      options: ['Give us your feedback']
+    };
+
+    await sendListMessage(fromNumber, listMessage);
+    setUserState(fromNumber, 'awaitingSelection');
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+}
 
 
 
@@ -156,6 +142,8 @@ async function handleSelection(fromNumber, listid) {
     await handleUnknownOption(fromNumber);
   }
 }
+
+
 async function handleUnknownOption(fromNumber) {
   await sendWhatsAppMessage(fromNumber, "Unknown option. Please try again.");
   clearUserState(fromNumber);

@@ -31,7 +31,7 @@ sequelize.sync({ alter: true });
         } catch (error) {
           console.error('Error processing pending messages:', error);
         }
-      }, 500);
+      }, 100);
     });
   } catch (error) {
     console.error('Failed to initialize application:', error);

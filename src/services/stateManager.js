@@ -1,5 +1,3 @@
-// services/stateManager.js
-
 const userStates = new Map();
 
 function setUserState(phoneNumber, state) {

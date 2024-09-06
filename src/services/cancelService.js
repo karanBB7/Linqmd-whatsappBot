@@ -11,7 +11,7 @@ async function makeApiRequestCancel(payload, retries = 3) {
           'Content-Type': 'application/json',
           'Authorization': API_AUTH
         },
-        timeout: 30000 // Increase timeout to 30 seconds
+        timeout: 30000 
       });
       return response.data;
     } catch (error) {
@@ -19,7 +19,6 @@ async function makeApiRequestCancel(payload, retries = 3) {
       if (attempt === retries) {
         throw error;
       }
-      // Wait for 2 seconds before retrying
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }

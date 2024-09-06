@@ -22,8 +22,10 @@ async function processMessage(messageId) {
       console.log(`Message with id ${message.id} sent to queue`);
 
       await handleIncomingMessage(message);
-      await message.update({ status: 3 }); 
+      await message.update({ status: 3 });
+      // await message.destroy();
       console.log(`Message ${message.id} processed successfully`);
+      
     } else {
       console.log(`No message found with id ${messageId} and status 0`);
     }

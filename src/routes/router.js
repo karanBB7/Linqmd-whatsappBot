@@ -1,4 +1,3 @@
-const { processMessage } = require('../services/messageService');
 const rabbitmq = require('../config/rabbitmq');
 
 module.exports = function(app) {

@@ -1,25 +1,50 @@
-whatsapp/
+Based on the image, here's the structure of the project:
+
+BOT/
+│
+├── clinic/
+│   └── config/
+│       └── config.json
 │
 ├── config/
-|       └── config.json
-├── models/
-|       └── index.js
-|       └── receiver.js
-|
+│   ├── models/
+│   │   ├── feedback.js
+│   │   ├── index.js
+│   │   └── receiver.js
+│   └── node_modules/
+│
 ├── src/
+│   ├── config/
+│   │   └── rabbitmq.js
+│   │
 │   ├── controllers/
 │   │   └── appointmentController.js
 │   │
-│   ├── routes/
-│   │   └── appointmentController.js
+│   ├── handlers/
+│   │   ├── cancelHandler.js
+│   │   ├── feedbackHandler.js
+│   │   ├── mainHandler.js
+│   │   └── newHandler.js
 │   │
-│   ├── app.js
-│   └── server.js
+│   ├── middleware/
+│   │   ├── tokenMiddleware.js
+│   │   └── whatsappMiddleware.js
+│   │
+│   ├── routes/
+│   │   └── router.js
+│   │
+│   ├── services/
+│   │   ├── cancelService.js
+│   │   ├── feedbackService.js
+│   │   ├── messageService.js
+│   │   ├── stateManager.js
+│   │   └── viewService.js
+│   │
+│   └── app.js
 │
-├──tests/
-|    └── app.test.js
-│
-├── package.json
-└── Dockerfile
-└── Docker-compose.yml
-└── README.md
+├── .env
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── package-lock.json
+└── structure.txt

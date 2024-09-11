@@ -40,7 +40,7 @@ async function dropDates(phonenumber, bookingDateID) {
   };
   try {
     const response = await makeApiRequestCancel(payload);
-    console.log('Drop Dates API Response:', JSON.stringify(response, null, 2));
+    // console.log('Drop Dates API Response:', JSON.stringify(response, null, 2));
     return response;
   } catch (error) {
     console.error('Error in dropDates:', error.message);

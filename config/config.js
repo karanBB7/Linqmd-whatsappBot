@@ -1,4 +1,5 @@
 require('dotenv').config(); 
+
 module.exports = {
   development: {
     username: process.env.DB_USERNAME,
@@ -6,7 +7,7 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
-    port: process.env.DB_PORT || 5432, 
+    port: process.env.DB_PORT || 5432,  
     logging: false
   },
   test: {
@@ -23,7 +24,7 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
-    port: process.env.DB_PORT || 5432,
+    port: process.env.DB_PORT || 5432, 
     logging: false,
     dialectOptions: {
       ssl: {

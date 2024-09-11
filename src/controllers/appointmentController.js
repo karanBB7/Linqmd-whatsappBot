@@ -3,7 +3,7 @@ const { sendWhatsAppMessage} = require('../middleware/whatsappMiddleware');
 const { setUserState, getUserState, clearUserState } = require('../services/stateManager');
 
 
-const { handleInitialMessage } = require('../handllers/mainHandler.js');
+const { handleInitialMessage, sendListAgain } = require('../handllers/mainHandler.js');
 const { handleCancelAppointment, handleDropStatus } = require('../handllers/cancelHandler');
 const { handleViewAppointment } = require('../handllers/viewHandlers');
 const { handleFeedback, captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
@@ -78,7 +78,7 @@ async function handleSelection(fromNumber, listid) {
 
 async function handleUnknownOption(fromNumber) {
   await sendWhatsAppMessage(fromNumber, "Unknown option. Please try again.");
-  clearUserState(fromNumber);
+  await sendListAgain(fromNumber)
 }
 
 module.exports = { handleIncomingMessage };

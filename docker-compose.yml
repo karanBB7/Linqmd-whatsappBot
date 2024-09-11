@@ -5,15 +5,17 @@ services:
     build: .
     container_name: whatsappbot_app
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DB_HOST=db
       - DB_USERNAME=postgres
-      - DB_PASSWORD=root
-      - DB_DATABASE=whatsappbot
+      - DB_PASSWORD=linqmd-postgress
+      - DB_DATABASE=whatsapp
       - DB_DIALECT=postgres
+      - DB_SSL=true
+      - DB_SSL_REJECT_UNAUTHORIZED=false
       - RABBITMQ_URL=amqp://rabbitmq
     ports:
-      - "3001:3001"
+      - "3002:3002"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -26,10 +28,11 @@ services:
   db:
     image: postgres:14
     container_name: whatsappbot_db
+    command: -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: whatsappbot
+      POSTGRES_PASSWORD: linqmd-postgress
+      POSTGRES_DB: whatsapp
     ports:
       - "5432:5432"
     volumes:

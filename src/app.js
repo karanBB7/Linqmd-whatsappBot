@@ -32,8 +32,8 @@ async function initializeRabbitMQ() {
   }
 }
 
-app.listen(3001, async () => {
-  console.log('Server is running on http://localhost:3001');
+app.listen(3002, async () => {
+  console.log('Server is running on http://localhost:3002');
   
   setInterval(async () => {
     try {

@@ -1,9 +1,9 @@
 {
   "development": {
     "username": "postgres",
-    "password": "AU1Fx^3l**qBh7R",
-    "database": "linqmd",
-    "host": "beosports-dbinstance.cbblgy5t5vsd.ap-south-1.rds.amazonaws.com",
+    "password": "linqmd-postgress",
+    "database": "linqmd_whatsapp_bot",
+    "host": "linqmd-whatsapp-bot.c16iememgraw.ap-south-1.rds.amazonaws.com",
     "dialect": "postgres",
     "port": 5432,
     "logging": false
@@ -16,12 +16,20 @@
     "dialect": "postgres",
     "logging": false
   },
+  
   "production": {
     "username": "postgres",
-    "password": "root",
-    "database": "whatsappbot",
-    "host": "127.0.0.1",
+    "password": "linqmd-postgress",
+    "database": "whatsapp",
+    "host": "linqmd-whatsapp-bot.c16iememgraw.ap-south-1.rds.amazonaws.com",
     "dialect": "postgres",
-    "logging": false
+    "port": 5432,
+    "logging": false,
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   }
 }

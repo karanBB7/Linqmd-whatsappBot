@@ -1,0 +1,14 @@
+{
+    "AWSEBDockerrunVersion": "1",
+    "Image": {
+      "Name": "590183698429.dkr.ecr.ap-south-1.amazonaws.com/linqmd-bot:latest",
+      "Update": "true"
+    },
+    "Ports": [
+      {
+        "ContainerPort": "3002"
+      }
+    ],
+    "Volumes": [],
+    "Logging": "/var/log/nginx"
+  }

@@ -6,13 +6,24 @@ let channel = null;
 async function connect() {
   const maxRetries = 10;  
   const retryInterval = 10000;  
+  const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqps://linqmdbot:Linqmd*12345@b-68cea6cd-69df-4c7c-a069-2bcf02c9d349.mq.ap-south-1.amazonaws.com:5671';
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`Attempting to connect to RabbitMQ (attempt ${attempt}/${maxRetries})...`);
-      connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://localhost');
-      // connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq');
+
+      connection = await amqp.connect(rabbitmqUrl);
       channel = await connection.createChannel();
+
+      connection.on('error', (err) => {
+        console.error('RabbitMQ connection error', err);
+      });
+
+      connection.on('close', () => {
+        console.log('RabbitMQ connection closed. Attempting to reconnect...');
+        setTimeout(connect, retryInterval);
+      });
+
       console.log('Connected to RabbitMQ');
       return;
     } catch (error) {
@@ -61,9 +72,25 @@ async function consume(queueName, callback) {
   }
 }
 
+// Helper function to ensure connection before operations
+async function ensureConnection() {
+  if (!connection || !channel) {
+    await connect();
+  }
+}
+
 module.exports = {
   connect,
-  createQueue,
-  sendToQueue,
-  consume
+  createQueue: async (queueName) => {
+    await ensureConnection();
+    return createQueue(queueName);
+  },
+  sendToQueue: async (queueName, message) => {
+    await ensureConnection();
+    return sendToQueue(queueName, message);
+  },
+  consume: async (queueName, callback) => {
+    await ensureConnection();
+    return consume(queueName, callback);
+  }
 };

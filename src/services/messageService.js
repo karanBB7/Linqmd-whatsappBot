@@ -23,7 +23,7 @@ async function processMessage(messageId) {
 
       await handleIncomingMessage(message);
       await message.update({ status: 3 });
-      // await message.destroy();
+      await message.destroy();
       console.log(`Message ${message.id} processed successfully`);
       
     } else {

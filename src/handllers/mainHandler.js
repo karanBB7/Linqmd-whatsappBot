@@ -68,6 +68,23 @@ const { otherAppointments } = require('../handllers/viewHandlers');
       console.error("An error occurred:", error);
     }
   }
+
+
+  async function sendListAgain(fromNumber){
+    const appointmentData = await checkAppointment(fromNumber);
+    if (appointmentData.appointment_tense === 'future') {
+      const listMessage = {
+        title: 'Do you want to?',
+        body: 'Please select the respective activity.',
+        options: ['View Appointment', 'Cancel Appointment']
+    };
+    await sendListMessage(fromNumber, listMessage);
+    setUserState(fromNumber, 'awaitingSelection');
+    }else{
+      await handleOtherAppointments(fromNumber);
+    }
+  }
+
   
-  module.exports = {handleInitialMessage};
+  module.exports = {handleInitialMessage , sendListAgain};
   

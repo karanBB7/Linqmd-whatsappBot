@@ -43,18 +43,33 @@ async function handleCancelAppointment(fromNumber) {
 async function sendDatesToCancel(fromNumber, datesToDrop) {
   console.log(`Entering sendDatesToCancel for ${fromNumber}`);
   const rows = Object.entries(datesToDrop.booking_date).map(([id, dateTimeString]) => {
-    console.log(`Processing date: ${dateTimeString}`);
-    const [datePart, timePart] = dateTimeString.split(' ');
+    // console.log(`Processing date: ${dateTimeString}`);
+    const [datePart, ...timeParts] = dateTimeString.split(' ');
     const [year, month, day] = datePart.split('-');
-    const [time, period] = timePart.split(' ');
-    const [hour, minute] = time.split(':');
-    
+    const timeString = timeParts.join(' '); 
+    let hour, minute, period;
+    const timeMatch = timeString.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (timeMatch) {
+      [, hour, minute, period] = timeMatch;
+    } else {
+      // console.warn(`Unable to parse time from: ${timeString}`);
+      hour = '00';
+      minute = '00';
+    }
+    if (period) {
+      if (period.toUpperCase() === 'PM' && hour !== '12') {
+        hour = (parseInt(hour) + 12).toString();
+      } else if (period.toUpperCase() === 'AM' && hour === '12') {
+        hour = '00';
+      }
+    }
+
     const dateTime = DateTime.fromObject({
       year: parseInt(year),
       month: parseInt(month),
       day: parseInt(day),
-      hour: period === 'PM' ? parseInt(hour) + 12 : parseInt(hour),
-      minute: parseInt(minute)
+      hour: parseInt(hour) || 0,
+      minute: parseInt(minute) || 0
     }, { zone: 'utc' });
 
     return {
@@ -70,7 +85,7 @@ async function sendDatesToCancel(fromNumber, datesToDrop) {
     options: rows
   };
 
-  console.log(`Sending cancellation list for ${fromNumber}:`, JSON.stringify(listMessage, null, 2));
+  // console.log(`Sending cancellation list for ${fromNumber}:`, JSON.stringify(listMessage, null, 2));
   await sendCancellationDatesList(fromNumber, listMessage);
 }
 

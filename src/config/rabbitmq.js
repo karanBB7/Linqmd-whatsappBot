@@ -6,7 +6,7 @@ let channel = null;
 async function connect() {
   const maxRetries = 10;  
   const retryInterval = 10000;  
-  const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqps://linqmdbot:Linqmd*12345@b-68cea6cd-69df-4c7c-a069-2bcf02c9d349.mq.ap-south-1.amazonaws.com:5671';
+  const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://localhost:5672';  // const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqps://linqmdbot:Linqmd*12345@b-68cea6cd-69df-4c7c-a069-2bcf02c9d349.mq.ap-south-1.amazonaws.com:5671';
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {

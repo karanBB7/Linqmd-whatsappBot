@@ -5,6 +5,10 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
+    booking_id: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     fromNumber: {
       type: DataTypes.STRING,
       allowNull: false

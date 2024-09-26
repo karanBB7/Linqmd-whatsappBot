@@ -3,7 +3,7 @@ const { sendWhatsAppMessage, sendListMessage } = require('../middleware/whatsapp
 const { viewAppointment } = require('../services/viewService');
 const { clearUserState } = require('../services/stateManager');
 
-async function handleViewAppointment(fromNumber) {
+  async function handleViewAppointment(fromNumber) {
     try {
       const appointmentData = await viewAppointment(fromNumber);
       // console.log('View Appointment Response:', appointmentData);
@@ -50,6 +50,7 @@ async function handleViewAppointment(fromNumber) {
       }
   
       await sendWhatsAppMessage(fromNumber, message);
+      clearUserState(fromNumber);
     } catch (error) {
       console.error('Error handling view appointment:', error);
       await sendWhatsAppMessage(fromNumber, "Sorry, we encountered an error while fetching your appointment details.");

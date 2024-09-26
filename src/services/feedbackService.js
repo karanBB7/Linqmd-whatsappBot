@@ -2,8 +2,10 @@ const { Feedback } = require('../../models');
 
 const feedbackInProgress = new Map();
 
-function initializeFeedback(fromNumber, doctorName) {
-  feedbackInProgress.set(fromNumber, { doctor: doctorName });
+function initializeFeedback(fromNumber, username) {
+  if (!feedbackInProgress.has(fromNumber)) {
+    feedbackInProgress.set(fromNumber, { doctor: username });
+  }
 }
 
 function updateFeedbackInProgress(fromNumber, field, value) {
@@ -19,10 +21,11 @@ async function saveFeedback(fromNumber) {
       throw new Error('No feedback data found');
     }
 
-    const { doctor, ...jsonData } = feedbackData;
+    const { doctor, booking_id, ...jsonData } = feedbackData;
 
     const feedback = await Feedback.create({
       fromNumber,
+      booking_id,
       doctor,
       jsonData
     });
@@ -36,4 +39,8 @@ async function saveFeedback(fromNumber) {
   }
 }
 
-module.exports = { initializeFeedback, updateFeedbackInProgress, saveFeedback };
+function getFeedbackInProgress(fromNumber) {
+  return feedbackInProgress.get(fromNumber) || {};
+}
+
+module.exports = { initializeFeedback, updateFeedbackInProgress, saveFeedback, getFeedbackInProgress };

@@ -2,8 +2,8 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = 'your_secret_key';
 
-function createToken(username, fromNumber) {
-  return jwt.sign({ username, fromNumber }, SECRET_KEY, { expiresIn: '1h' });
+function createToken(username, fromNumber, docfullname, booking_id) {
+  return jwt.sign({ username, fromNumber, docfullname, booking_id }, SECRET_KEY, { expiresIn: '1h' });
 }
 
 function decodeToken(token) {
@@ -12,6 +12,8 @@ function decodeToken(token) {
     return { 
       username: decoded.username, 
       fromNumber: decoded.fromNumber, 
+      docfullname: decoded.docfullname, 
+      booking_id: decoded.booking_id, 
     };
   } catch (error) {
     console.error('Error decoding token:', error);

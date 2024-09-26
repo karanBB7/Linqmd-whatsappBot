@@ -1,22 +1,15 @@
 const { createToken, setUserToken } = require('../middleware/tokenMiddleware');
 const { sendWhatsAppMessage, sendListMessage } = require('../middleware/whatsappMiddleware');
 const { checkAppointment } = require('../services/viewService');
-const { DateTime } = require('luxon');
 const { setUserState} = require('../services/stateManager');
 const { otherAppointments } = require('../handllers/viewHandlers');
 
     async function handleInitialMessage(fromNumber) {
         try {
             const appointmentData = await checkAppointment(fromNumber);
-            
             if (appointmentData.success === 'true') {
-                const token = createToken(appointmentData.Username, fromNumber);
-                setUserToken(fromNumber, token);
-                // console.log("token", token);
-        
-                const date = DateTime.fromISO(appointmentData.date);
-                const formattedDate = date.toFormat('cccc d LLLL');
-        
+                const token = createToken(appointmentData.Username, fromNumber, appointmentData.Docfullname, appointmentData.booking_id);                
+                setUserToken(fromNumber, token);        
                 if (appointmentData.appointment_tense === 'future') {
                 const message = `Dear ${appointmentData.patient_name}, You have an appointment with ${appointmentData.Docfullname} at ${appointmentData.clinic_name} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
                 
@@ -27,6 +20,8 @@ const { otherAppointments } = require('../handllers/viewHandlers');
                     body: 'Please select the respective activity.',
                     options: ['View Appointment', 'Cancel Appointment']
                 };
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 await sendListMessage(fromNumber, listMessage);
                 
                 setUserState(fromNumber, 'awaitingSelection');
@@ -85,6 +80,17 @@ const { otherAppointments } = require('../handllers/viewHandlers');
     }
   }
 
+  async function sendYesOrNo(fromNumber){
+      const listMessage = {
+        title: 'Do you have anything else?',
+        body: 'Please select the respective activity.',
+        options: ['Yes', 'No']
+    };
+    await sendListMessage(fromNumber, listMessage);
+    setUserState(fromNumber, 'awaitingSelection');
+    
+  }
+
   
-  module.exports = {handleInitialMessage , sendListAgain};
+  module.exports = {handleInitialMessage , sendListAgain, sendYesOrNo};
   

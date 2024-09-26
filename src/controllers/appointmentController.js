@@ -3,37 +3,50 @@ const { sendWhatsAppMessage} = require('../middleware/whatsappMiddleware');
 const { setUserState, getUserState, clearUserState } = require('../services/stateManager');
 
 
-const { handleInitialMessage, sendListAgain } = require('../handllers/mainHandler.js');
+const { handleInitialMessage, sendListAgain, sendYesOrNo } = require('../handllers/mainHandler.js');
 const { handleCancelAppointment, handleDropStatus } = require('../handllers/cancelHandler');
 const { handleViewAppointment } = require('../handllers/viewHandlers');
 const { handleFeedback, captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
 
 const commandHandlers = {
-  initial: async (fromNumber, listid) => {
-    return listid === null ? handleInitialMessage(fromNumber) : handleUnknownOption(fromNumber);
-  },
+  initial: (fromNumber, listid) => 
+    listid === null ? handleInitialMessage(fromNumber) : handleUnknownOption(fromNumber),
+  
   awaitingSelection: handleSelection,
   viewingAppointment: handleViewAppointment,
   cancellingAppointment: handleCancelAppointment,
+  giveusyourfeedback: handleFeedback,
+
   awaitingCancellationConfirmation: async (fromNumber, listid) => {
-    return listid ? handleDropStatus(fromNumber, listid) : handleUnknownOption(fromNumber);
+    if (!listid) return handleUnknownOption(fromNumber);
+    try {
+      await handleDropStatus(fromNumber, listid);
+      return handleOther(fromNumber);
+    } catch (error) {
+      console.error('Error in handleDropStatus:', error);
+      await sendWhatsAppMessage(fromNumber, "Sorry, there was an error cancelling your appointment. Please try again later.");
+      return clearUserState(fromNumber);
+    }
   },
-  giveusyourfeedback: async (fromNumber) => {
+
+  captureFeedback: (fromNumber, listid, messages) => 
+    listid === null ? captureFeedback(fromNumber, messages) : handleUnknownOption(fromNumber),
+
+  captureReasonForVisit: (fromNumber, listid, messages) => 
+    listid === null ? captureReasonForVisit(fromNumber, messages) : handleUnknownOption(fromNumber),
+
+  captureOvercome: (fromNumber, listid, messages) => {
     const token = getUserToken(fromNumber);
-    return handleFeedback(fromNumber, token);
+    return listid === null ? captureOvercome(fromNumber, messages, token) : handleUnknownOption(fromNumber);
   },
-  captureFeedback: async (fromNumber, listid, messages) => {
-    return listid === null ? captureFeedback(fromNumber, messages) : handleUnknownOption(fromNumber);
-  },
-  captureReasonForVisit: async (fromNumber, listid, messages) => {
-    return listid === null ? captureReasonForVisit(fromNumber, messages) : handleUnknownOption(fromNumber);
-  },
-  captureOvercome: async (fromNumber, listid, messages) => {
-    return listid === null ? captureOvercome(fromNumber, messages) : handleUnknownOption(fromNumber);
-  },
+
   captureRating: async (fromNumber, listid) => {
-    return listid ? captureRating(fromNumber, listid) : handleUnknownOption(fromNumber);
-  }
+    if (!listid) return handleUnknownOption(fromNumber);
+    await captureRating(fromNumber, listid);
+    return handleOther(fromNumber);
+  },
+
+  awaitingYesNo: handleSelection
 };
 
 async function handleIncomingMessage(message) {
@@ -58,6 +71,7 @@ async function handleSelection(fromNumber, listid) {
   if (listid === 'viewappointment') {
     setUserState(fromNumber, 'viewingAppointment');
     await handleViewAppointment(fromNumber);
+    await handleOther(fromNumber);
   } else if (listid === 'cancelappointment') {
     setUserState(fromNumber, 'cancellingAppointment');
     await handleCancelAppointment(fromNumber);
@@ -69,16 +83,27 @@ async function handleSelection(fromNumber, listid) {
     }else{
       await handleUnknownOption(fromNumber);
     }
-     
+  } else if(listid === 'yes'){
+    await sendListAgain(fromNumber);
+  } else if(listid === 'no'){
+    await sendWhatsAppMessage(fromNumber, "Thank you for using our service. Have a great day!");
+    clearUserState(fromNumber);
   } else {
     await handleUnknownOption(fromNumber);
   }
 }
 
-
 async function handleUnknownOption(fromNumber) {
   await sendWhatsAppMessage(fromNumber, "Unknown option. Please try again.");
+  await new Promise(resolve => setTimeout(resolve, 2000));
   await sendListAgain(fromNumber)
 }
+
+async function handleOther(fromNumber) {
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  await sendYesOrNo(fromNumber);
+  setUserState(fromNumber, 'awaitingYesNo');
+}
+
 
 module.exports = { handleIncomingMessage };

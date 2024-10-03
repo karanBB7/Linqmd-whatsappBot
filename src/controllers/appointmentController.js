@@ -6,7 +6,7 @@ const { setUserState, getUserState, clearUserState } = require('../services/stat
 const { handleInitialMessage, sendListAgain, sendYesOrNo } = require('../handllers/mainHandler.js');
 const { handleCancelAppointment, handleDropStatus } = require('../handllers/cancelHandler');
 const { handleViewAppointment } = require('../handllers/viewHandlers');
-const { handleFeedback, captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
+const {  captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
 
 const commandHandlers = {
   initial: (fromNumber, listid) => 
@@ -15,7 +15,10 @@ const commandHandlers = {
   awaitingSelection: handleSelection,
   viewingAppointment: handleViewAppointment,
   cancellingAppointment: handleCancelAppointment,
-  giveusyourfeedback: handleFeedback,
+  giveusyourfeedback: (fromNumber) => {
+    const token = getUserToken(fromNumber);
+    return captureOvercome(fromNumber, token);
+  },
 
   awaitingCancellationConfirmation: async (fromNumber, listid) => {
     if (!listid) return handleUnknownOption(fromNumber);
@@ -29,25 +32,34 @@ const commandHandlers = {
     }
   },
 
-  captureFeedback: (fromNumber, listid, messages) => 
-    listid === null ? captureFeedback(fromNumber, messages) : handleUnknownOption(fromNumber),
-
-  captureReasonForVisit: (fromNumber, listid, messages) => 
-    listid === null ? captureReasonForVisit(fromNumber, messages) : handleUnknownOption(fromNumber),
-
-  captureOvercome: (fromNumber, listid, messages) => {
-    const token = getUserToken(fromNumber);
-    return listid === null ? captureOvercome(fromNumber, messages, token) : handleUnknownOption(fromNumber);
-  },
-
   captureRating: async (fromNumber, listid) => {
     if (!listid) return handleUnknownOption(fromNumber);
     await captureRating(fromNumber, listid);
-    return handleOther(fromNumber);
+  },
+
+  captureFeedback: async (fromNumber, listid, messages) => {
+    if (listid === null) {
+      await captureFeedback(fromNumber, messages);
+    } else {
+      return handleUnknownOption(fromNumber);
+    }
+  },
+
+  captureReasonForVisit: async (fromNumber, listid, messages) => {
+    if (listid === null) {
+      await captureReasonForVisit(fromNumber, messages);
+      return handleOther(fromNumber);
+    } else {
+      return handleUnknownOption(fromNumber);
+    }
   },
 
   awaitingYesNo: handleSelection
 };
+
+
+
+
 
 async function handleIncomingMessage(message) {
   const { fromNumber, messages, listid } = message;
@@ -79,7 +91,7 @@ async function handleSelection(fromNumber, listid) {
     setUserState(fromNumber, 'giveusyourfeedback');
     const token = getUserToken(fromNumber);
     if(token){
-      await handleFeedback(fromNumber, token);
+      await captureOvercome(fromNumber, token);
     }else{
       await handleUnknownOption(fromNumber);
     }

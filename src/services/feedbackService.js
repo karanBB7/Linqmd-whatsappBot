@@ -21,18 +21,21 @@ async function saveFeedback(fromNumber) {
       throw new Error('No feedback data found');
     }
 
-    const { doctor, booking_id, ...jsonData } = feedbackData;
+    const { doctor, booking_id, rating, feedback, reasonForVisit, ...jsonData } = feedbackData;
 
-    const feedback = await Feedback.create({
+    const feedbackRecord = await Feedback.create({
       fromNumber,
       booking_id,
       doctor,
+      rating,
+      feedback,
+      reasonForVisit,
       jsonData
     });
 
     feedbackInProgress.delete(fromNumber);
 
-    return feedback;
+    return feedbackRecord;
   } catch (error) {
     console.error('Error saving complete feedback:', error);
     throw error;

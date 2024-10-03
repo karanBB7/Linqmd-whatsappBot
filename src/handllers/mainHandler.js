@@ -3,6 +3,7 @@ const { sendWhatsAppMessage, sendListMessage } = require('../middleware/whatsapp
 const { checkAppointment } = require('../services/viewService');
 const { setUserState} = require('../services/stateManager');
 const { otherAppointments } = require('../handllers/viewHandlers');
+const { captureOvercome } = require('../handllers/feedbackHandler');
 
     async function handleInitialMessage(fromNumber) {
         try {
@@ -27,9 +28,10 @@ const { otherAppointments } = require('../handllers/viewHandlers');
                 setUserState(fromNumber, 'awaitingSelection');
         
                 } else {
-                const message = `Dear ${appointmentData.patient_name}, You previously visited ${appointmentData.Docfullname} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;
+                const message = `Hello, ${appointmentData.patient_name}, thank you for consulting, ${appointmentData.Docfullname}. on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}. Please help other patients like you, by providing a detailed feedback on your experience.`;
                 await sendWhatsAppMessage(fromNumber, message);
-                await handleOtherAppointments(fromNumber);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                await captureOvercome(fromNumber, token);
                 }
             } else {
                 await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");

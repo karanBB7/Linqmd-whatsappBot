@@ -14,6 +14,18 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     doctor: DataTypes.TEXT,
+    rating: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    feedback: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    reasonForVisit: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     jsonData: {
       type: DataTypes.JSON,
       allowNull: false,
@@ -23,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
     }
-
   },
   {
     tableName: 'feedback',
@@ -32,4 +43,3 @@ module.exports = (sequelize, DataTypes) => {
 
   return Feedback;
 };
- 

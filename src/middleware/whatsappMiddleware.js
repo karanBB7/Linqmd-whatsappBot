@@ -1,14 +1,19 @@
 const axios = require('axios');
-const rabbitmq = require('../config/rabbitmq');
+const sqs = require('../config/sqs');
 
 const WHATSAPP_API_URL = 'https://whatsappapi-79t7.onrender.com/send-text-message';
 const WHATSAPP_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJPd25lck5hbWUiOiJCaXp0ZWNobm9zeXMtbWlkd2FyZSIsInBob25lTnVtYmVySWQiOiIyNDg4OTg2NDQ5NzI0MDQiLCJ3aGF0c2FwcE1ldGFUb2tlbiI6IkVBQXhWMWc0dDI0UUJPd2ZBOGw1Q3d6Tm1qNUlvaHlWUkdaQWNKemRpTW9xb3hMWDZ1a3h3cVEzSDlGZVRHZUVuVmxaQkRhMXc0dUYxUzczUUk0OVkwTEpPQ1hJU0tTd2dBZkJnZ1N6dzNyUWlWSmtLRWt0Q0lMaTlqdzNRbUhXMmxnWFpBaXlwdXdaQ3FhSmRRaXBsb0M1SEtyYUx0ODZiSnVtSEt3RUFXNGthMGRaQlRPNWl4dWV1R1Ztb0daQ2JLbkZBUEEwVzkwWkNVR2dSZ29oIiwiaWF0IjoxNzA5MjAwMTEwfQ.ZMy9wpBxphJbpEOYI3bBchlywwKCIN23GJiYrDlvXyc';
 
+
+// const WHATSAPP_API_URL = 'https://midware.onrender.com/send-text-message';
+// const WHATSAPP_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJPd25lck5hbWUiOiJBYWR5YS1saW5xbWQiLCJwaG9uZU51bWJlcklkIjoiMzQ5MDI4MjY0OTYxMjM2Iiwid2hhdHNhcHBNZXRhVG9rZW4iOiJFQUFMdlNXakVKUjBCT3hHZEJna09lRFNhUXowdm1RQ2RDbnFUb3VTZmMwSzBPU2VFSnhQV2hxNGc4Tk1aQ2s1SGZuSnR2eXFrSlU4MU1LaUY0RGJOOHVURzlaQk83alFReThRYVZoT2M2SGNLYnhUQnRWWkJ6Um5rOEpPMm1JZTAxNHZFYW5VYktKaU8zMFFrS0hSV3Z4RWo1VnpqWkNJeFJXMjcyQlZlWTExdkpuOVdQbUxSRUtUUDh2MjJKS1pBQyIsImlhdCI6MTcyMTcyNzg1MX0.iCvT0K5QyHk-HvfHHHtcboH0bL3LPyZZLNV_pvcxO2Q';
+
+
+let outgoingQueueUrl;
+
 async function sendWhatsAppMessage(phone, message) {
   try {
-    // console.log(`Queueing WhatsApp message for ${phone}`);
-    await rabbitmq.sendToQueue('outgoing_messages', { phone, message, type: 'text' });
-    // console.log(`Message queued for sending to ${phone}`);
+    await sqs.sendMessage(outgoingQueueUrl, { phone, message, type: 'text' });
   } catch (error) {
     console.error('Error queueing WhatsApp message:', error);
     throw error;
@@ -17,7 +22,6 @@ async function sendWhatsAppMessage(phone, message) {
 
 async function sendListMessage(phone, listMessage) {
   try {
-    // console.log(`Queueing WhatsApp list message for ${phone}`);
     const formattedListMessage = {
       type: "interactive",
       interactive: {
@@ -43,18 +47,15 @@ async function sendListMessage(phone, listMessage) {
         }
       }
     };
-    await rabbitmq.sendToQueue('outgoing_messages', { phone, message: formattedListMessage, type: 'list' });
-    // console.log(`Interactive message queued for sending to ${phone}`);
+    await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'list' });
   } catch (error) {
     console.error('Error queueing WhatsApp list message:', error);
     throw error;
   }
 }
 
-
 async function sendFeedbackRating(phone, listMessage) {
   try {
-    // console.log(`Queueing WhatsApp list message for ${phone}`);
     const formattedListMessage = {
       type: "interactive",
       interactive: {
@@ -81,20 +82,16 @@ async function sendFeedbackRating(phone, listMessage) {
         }
       }
     };
-    await rabbitmq.sendToQueue('outgoing_messages', { phone, message: formattedListMessage, type: 'list' });
-    // console.log(`Interactive message queued for sending to ${phone}`);
+    await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'list' });
   } catch (error) {
     console.error('Error queueing WhatsApp list message:', error);
     throw error;
   }
 }
 
-
-
-
 async function sendCancellationDatesList(phone, listMessage) {
   try {
-    console.log(`Queueing WhatsApp cancellation dates list for ${phone}`);
+    // console.log(`Queueing WhatsApp cancellation dates list for ${phone}`);
     const formattedListMessage = {
       type: "interactive",
       interactive: {
@@ -121,8 +118,8 @@ async function sendCancellationDatesList(phone, listMessage) {
         }
       }
     };
-    await rabbitmq.sendToQueue('outgoing_messages', { phone, message: formattedListMessage, type: 'cancellation_list' });
-    console.log(`Cancellation dates list queued for sending to ${phone}`);
+    await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'cancellation_list' });
+    // console.log(`Cancellation dates list queued for sending to ${phone}`);
   } catch (error) {
     console.error('Error queueing WhatsApp cancellation dates list:', error);
     throw error;
@@ -164,14 +161,28 @@ async function processOutgoingMessage(messageData) {
   }
 }
 
-function startOutgoingMessageConsumer() {
-  rabbitmq.consume('outgoing_messages', async (messageData) => {
-    try {
-      await processOutgoingMessage(messageData);
-    } catch (error) {
-      console.error('Error processing outgoing message:', error);
+async function startOutgoingMessageConsumer(queueUrl) {
+  outgoingQueueUrl = queueUrl;
+  console.log('Starting outgoing message consumer...');
+  consumeOutgoingMessages();
+}
+
+async function consumeOutgoingMessages() {
+  try {
+    const message = await sqs.receiveMessage(outgoingQueueUrl);
+    if (message) {
+
+      // console.log('Received outgoing message:', message.content);
+
+      await processOutgoingMessage(message.content);
+      await sqs.deleteMessage(outgoingQueueUrl, message.receiptHandle);
     }
-  });
+  } catch (error) {
+    console.error('Error consuming outgoing message:', error);
+  }
+  
+  // Continue polling for messages
+  setImmediate(consumeOutgoingMessages);
 }
 
 module.exports = { 

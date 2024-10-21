@@ -1,23 +1,23 @@
 const { decodeToken } = require('../middleware/tokenMiddleware');
 const { sendWhatsAppMessage, sendFeedbackRating } = require('../middleware/whatsappMiddleware');
 const { setUserState, clearUserState, getUserState } = require('../services/stateManager');
-const { initializeFeedback, updateFeedbackInProgress, saveFeedback, getFeedbackInProgress } = require('../services/feedbackService');
+const { initializeFeedback, updateFeedbackInProgress, getAllFeedbackForBooking } = require('../services/feedbackService');
 
-const TIMEOUT_DURATION = 3600; 
+const TIMEOUT_DURATION = 3600000; 
 
 async function captureOvercome(fromNumber, token) {
   const decodedToken = decodeToken(token);
   const doctorName = decodedToken.docfullname;
   const username = decodedToken.username;
   const booking_id = decodedToken.booking_id;
+  const doctor_user_id = decodedToken.doctor_user_id;
 
-  initializeFeedback(fromNumber, username);
-  updateFeedbackInProgress(fromNumber, 'doctorName', doctorName);
-  updateFeedbackInProgress(fromNumber, 'booking_id', booking_id);
+  initializeFeedback(fromNumber, username, booking_id, doctor_user_id);
+  await updateFeedbackInProgress(fromNumber, 'doctorName', doctorName);
 
   const ratingOptions = {
-    title: 'Rate Experience',
-    body: 'Please rate your overall experience',
+    title: 'Your Experience',
+    body: `Based on your experience, how likely are you to recommend ${doctorName} to others with conditions similar to yours:`,
     options: [
       { id: 'rating3', title: 'Definitely recommend', description: 'Definitely recommend' },
       { id: 'rating2', title: 'Maybe', description: 'Maybe' },
@@ -40,12 +40,11 @@ async function captureRating(fromNumber, listid) {
     'rating1': 1, 'rating2': 2, 'rating3': 3
   };
   const rating = ratingMap[listid] || 0;
-  updateFeedbackInProgress(fromNumber, 'rating', rating);
+  await updateFeedbackInProgress(fromNumber, 'rating', rating);
 
   await sendWhatsAppMessage(fromNumber, "Please provide few lines on the reason you visited the doctor.");
   setUserState(fromNumber, 'captureFeedback');
   
-  // Set timeout for feedback capture
   setTimeout(async () => {
     if (getUserState(fromNumber) === 'captureFeedback') {
       await sendWhatsAppMessage(fromNumber, "You didn't provide feedback within the time limit. The feedback process has been cancelled.");
@@ -55,11 +54,10 @@ async function captureRating(fromNumber, listid) {
 }
 
 async function captureFeedback(fromNumber, message) {
-  updateFeedbackInProgress(fromNumber, 'feedback', message);
+  await updateFeedbackInProgress(fromNumber, 'feedback', message);
   await sendWhatsAppMessage(fromNumber, "Please provide feedback on how you are feeling now and how the doctor helped you get better.");
   setUserState(fromNumber, 'captureReasonForVisit');
   
-  // Set timeout for reason for visit capture
   setTimeout(async () => {
     if (getUserState(fromNumber) === 'captureReasonForVisit') {
       await sendWhatsAppMessage(fromNumber, "You didn't provide a reason for visit within the time limit. The feedback process has been cancelled.");
@@ -69,11 +67,9 @@ async function captureFeedback(fromNumber, message) {
 }
 
 async function captureReasonForVisit(fromNumber, message) {
-  updateFeedbackInProgress(fromNumber, 'reasonForVisit', message);
+  await updateFeedbackInProgress(fromNumber, 'reasonForVisit', message);
 
-  await saveFeedback(fromNumber);
-
-  await sendWhatsAppMessage(fromNumber, "Thank you for your feedback!");
+  await sendWhatsAppMessage(fromNumber, "Thank you for your feedback! Your input is valuable to us.");
   clearUserState(fromNumber);
 }
 

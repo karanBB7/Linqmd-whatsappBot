@@ -1,6 +1,8 @@
 const { Receiver } = require('../../models');
 const { handleIncomingMessage } = require('../controllers/appointmentController');
-const rabbitmq = require('../config/rabbitmq');
+const sqs = require('../config/sqs');
+
+let incomingQueueUrl;
 
 async function processMessage(messageId) {
   try {
@@ -9,10 +11,9 @@ async function processMessage(messageId) {
     });
 
     if (message) {
-      // console.log(`Processing message: ${message.id}`);
-      await message.update({ status: 1 }); 
+      await message.update({ status: 1 });
 
-      rabbitmq.sendToQueue('incoming_messages', {
+      await sqs.sendMessage(incomingQueueUrl, {
         id: message.id,
         fromNumber: message.fromNumber,
         messages: message.messages,
@@ -25,7 +26,6 @@ async function processMessage(messageId) {
       await message.update({ status: 3 });
       await message.destroy();
       console.log(`Message ${message.id} processed successfully`);
-      
     } else {
       console.log(`No message found with id ${messageId} and status 0`);
     }
@@ -50,14 +50,27 @@ async function processAllPendingMessages() {
   }
 }
 
-function startMessageConsumer() {
-  rabbitmq.consume('incoming_messages', async (message) => {
-    try {
-      // console.log('Received message from queue:');
-    } catch (error) {
-      console.error('Error handling message from queue:', error);
-    }
-  });
+async function startMessageConsumer(queueUrl) {
+  incomingQueueUrl = queueUrl;
+  console.log('Starting message consumer...');
+  consumeMessages();
 }
+
+async function consumeMessages() {
+  try {
+    const message = await sqs.receiveMessage(incomingQueueUrl);
+    if (message) {
+      console.log('Received message from queue:', message.content);
+      await processMessage(message.content.id);
+      await sqs.deleteMessage(incomingQueueUrl, message.receiptHandle);
+      // console.log(`Message ${message.content.id} deleted from queue`);
+    }
+  } catch (error) {
+    console.error('Error consuming message:', error);
+  }
+  
+  setImmediate(consumeMessages);
+}
+
 
 module.exports = { processMessage, processAllPendingMessages, startMessageConsumer };

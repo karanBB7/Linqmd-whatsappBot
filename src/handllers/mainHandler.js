@@ -9,7 +9,8 @@ const { captureOvercome } = require('../handllers/feedbackHandler');
         try {
             const appointmentData = await checkAppointment(fromNumber);
             if (appointmentData.success === 'true') {
-                const token = createToken(appointmentData.Username, fromNumber, appointmentData.Docfullname, appointmentData.booking_id);                
+                const token = createToken(appointmentData.Username, fromNumber, appointmentData.Docfullname, appointmentData.booking_id, appointmentData.doctor_user_id);  
+                
                 setUserToken(fromNumber, token);        
                 if (appointmentData.appointment_tense === 'future') {
                 const message = `Dear ${appointmentData.patient_name}, You have an appointment with ${appointmentData.Docfullname} at ${appointmentData.clinic_name} on ${new Date(appointmentData.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${appointmentData.slotTime}.`;

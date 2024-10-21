@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    fromNumber: {
+    doctor_user_id: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     rating: {
       type: DataTypes.INTEGER,
       allowNull: true
+    },
+    fromNumber: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     feedback: {
       type: DataTypes.TEXT,
@@ -30,6 +34,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.JSON,
       allowNull: false,
       defaultValue: {}
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
     },
     createdAt: {
       type: DataTypes.DATE,

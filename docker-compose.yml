@@ -9,16 +9,18 @@ services:
       - DB_HOST=db
       - DB_USERNAME=postgres
       - DB_PASSWORD=linqmd-postgress
-      - DB_DATABASE=whatsapp
+      - DB_DATABASE=whatsapptest
       - DB_DIALECT=postgres
       - DB_SSL=true
       - DB_SSL_REJECT_UNAUTHORIZED=false
-      - RABBITMQ_URL=amqp://rabbitmq
+      - AWS_ACCESS_KEY_ID=your_aws_access_key_id
+      - AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+      - AWS_REGION=your_aws_region
+      - SQS_INCOMING_QUEUE_URL=https://sqs.your-region.amazonaws.com/your-account-id/incoming_messages
+      - SQS_OUTGOING_QUEUE_URL=https://sqs.your-region.amazonaws.com/your-account-id/outgoing_messages
     ports:
       - "3002:3002"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       db:
         condition: service_started
     networks:
@@ -32,27 +34,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: linqmd-postgress
-      POSTGRES_DB: whatsapp
+      POSTGRES_DB: whatsapptest
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - whatsappbot_network
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: whatsappbot_rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - whatsappbot_network
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   postgres_data:

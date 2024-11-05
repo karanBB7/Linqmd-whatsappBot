@@ -20,7 +20,7 @@ const { captureOvercome } = require('../handllers/feedbackHandler');
                 const listMessage = {
                     title: 'Do you want to?',
                     body: 'Please select the respective activity.',
-                    options: ['View Appointment', 'Cancel Appointment']
+                    options: ['View Appointment', 'Cancel Appointment', 'Ask Question']
                 };
 
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -35,7 +35,16 @@ const { captureOvercome } = require('../handllers/feedbackHandler');
                 await captureOvercome(fromNumber, token);
                 }
             } else {
-                await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
+                // await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
+
+                const listMessage = {
+                  title: 'Ask me anything',
+                  body: 'Please select the respective activity.',
+                  options: ['Ask Question']
+              };
+              await sendListMessage(fromNumber, listMessage);
+              setUserState(fromNumber, 'awaitingSelection');
+
             }
 
         } catch (error) {
@@ -53,11 +62,11 @@ const { captureOvercome } = require('../handllers/feedbackHandler');
       const listMessage = checkforotherappointments ? {
         title: 'Do you want to?',
         body: 'Please select the respective activity.',
-        options: ['Give us your feedback', 'View Appointment', 'Cancel Appointment']
+        options: ['Give us your feedback', 'View Appointment', 'Cancel Appointment', 'Ask Question']
       } : {
         title: 'Do you want to?',
         body: 'Please select the respective activity.',
-        options: ['Give us your feedback']
+        options: ['Give us your feedback', 'Ask Question']
       };
   
       await sendListMessage(fromNumber, listMessage);
@@ -74,7 +83,7 @@ const { captureOvercome } = require('../handllers/feedbackHandler');
       const listMessage = {
         title: 'Do you want to?',
         body: 'Please select the respective activity.',
-        options: ['View Appointment', 'Cancel Appointment']
+        options: ['View Appointment', 'Cancel Appointment', 'Ask Question']
     };
     await sendListMessage(fromNumber, listMessage);
     setUserState(fromNumber, 'awaitingSelection');

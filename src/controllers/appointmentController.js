@@ -7,11 +7,27 @@ const { handleInitialMessage, sendListAgain, sendYesOrNo } = require('../handlle
 const { handleCancelAppointment, handleDropStatus } = require('../handllers/cancelHandler');
 const { handleViewAppointment } = require('../handllers/viewHandlers');
 const {  captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
+const { sendQuestion, sendAskAnything } = require('../handllers/questionAnswerHandler.js');
+
+
 
 const commandHandlers = {
   initial: (fromNumber, listid) => 
     listid === null ? handleInitialMessage(fromNumber) : handleUnknownOption(fromNumber),
   
+  questionAndAnswer: sendAskAnything,
+
+
+  getQuestion: async (fromNumber, listid, messages) => {
+    if (listid === null) {
+      const token = getUserToken(fromNumber);
+      await sendQuestion(fromNumber, messages, token);
+    } else {
+      return handleUnknownOption(fromNumber);
+    }
+  },
+
+
   awaitingSelection: handleSelection,
   viewingAppointment: handleViewAppointment,
   cancellingAppointment: handleCancelAppointment,
@@ -100,7 +116,17 @@ async function handleSelection(fromNumber, listid) {
   } else if(listid === 'no'){
     await sendWhatsAppMessage(fromNumber, "Thank you for using our service. Have a great day!");
     clearUserState(fromNumber);
-  } else {
+  } 
+  
+
+  else if (listid === 'askquestion'){
+    setUserState(fromNumber, 'questionAndAnswer');
+    await sendAskAnything(fromNumber);
+  } 
+  
+  
+  
+  else {
     await handleUnknownOption(fromNumber);
   }
 }

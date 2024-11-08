@@ -5,9 +5,14 @@ const { processAllPendingMessages, startMessageConsumer } = require('./services/
 const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
 
+const { users, dashboard } = require('./routes/dashboardRouter.js');
+
 const app = restify.createServer();
 
 app.use(restify.plugins.bodyParser());
+
+users(app);
+dashboard(app);
 
 appointmentRoutes(app);
 

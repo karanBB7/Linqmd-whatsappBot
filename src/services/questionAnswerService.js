@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const API_URL = 'http://localhost:5000/ask';
+const API_URL = 'https://llm-9ju4.onrender.com/ask';
 
 async function getAnaswer(question, doctorusername, fromNumber) {
 

@@ -12,14 +12,6 @@ module.exports = (sequelize, DataTypes) => {
     messages: {
       type: DataTypes.TEXT,
       allowNull: true
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
     }
   }, {
     tableName: 'dms',

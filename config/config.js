@@ -21,7 +21,7 @@ module.exports = {
   production: {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'linqmd-postgress',
-    database: process.env.DB_DATABASE || 'whatsapp',
+    database: process.env.DB_DATABASE || 'whatsapptest',
     host: process.env.DB_HOST || 'linqmd-whatsapp-bot.c16iememgraw.ap-south-1.rds.amazonaws.com',
     dialect: process.env.DB_DIALECT || 'postgres',
     port: parseInt(process.env.DB_PORT, 10) || 5432,

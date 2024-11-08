@@ -46,7 +46,7 @@ app.listen(3002, async () => {
     } catch (error) {
       console.error('Error processing pending messages:', error);
     }
-  }, 100);
+  }, 2000);
 
   initializeSQS();
 });

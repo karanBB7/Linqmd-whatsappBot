@@ -106,6 +106,12 @@
 
 .chat-cell {
     padding: 12px !important;
+
+}
+
+.chatarea{
+        height: 300px !important;
+    overflow: auto;
 }
 
 .patient-list::-webkit-scrollbar {
@@ -135,3 +141,39 @@
 .patient-list {
     overflow-y: overlay;
 }
+
+
+.phonenumber{
+    cursor: pointer;
+}
+
+.feedbackWrapper{
+    width: 100%;
+    border: 1px solid rgb(0,0,0);
+    padding: 5px;
+    margin-top: 10px;
+}
+
+.feedbacktitle{
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.timeago{
+    font-size: 10px;
+    color: green;
+    text-align: right;
+}
+
+
+.date{
+    font-size: 11px;
+    color: #6672ff;
+    text-align: right;
+    font-weight: bold;
+    
+}
+
+
+
+

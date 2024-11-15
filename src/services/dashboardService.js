@@ -1,6 +1,10 @@
 const axios = require('axios');
 const https = require('https');
 
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+
+
 const API_URL = 'http://localhost/linqmd/api/getUser';
 const API_AUTH = 'Basic OmJHbHVjVzFrT2xOQWFWQnJTRzFHVTJGcE9Ybz0=';
 
@@ -24,5 +28,8 @@ async function getUser(){
         console.log("Error while getting User", error);
     }
 }
+
+
+
 
 module.exports = { getUser };

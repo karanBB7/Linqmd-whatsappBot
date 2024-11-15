@@ -6,6 +6,7 @@ const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
 
 const { users, dashboard } = require('./routes/dashboardRouter.js');
+const { getCancled, getFeedbackNumber } = require('./routes/getCancled.js');
 
 const app = restify.createServer();
 
@@ -13,6 +14,8 @@ app.use(restify.plugins.bodyParser());
 
 users(app);
 dashboard(app);
+getCancled(app);
+getFeedbackNumber(app);
 
 appointmentRoutes(app);
 

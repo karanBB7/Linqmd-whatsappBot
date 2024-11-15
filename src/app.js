@@ -6,7 +6,7 @@ const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
 
 const { users, dashboard } = require('./routes/dashboardRouter.js');
-const { getCancled, getFeedbackNumber } = require('./routes/getCancled.js');
+const { getCancled, getFeedbackNumber } = require('./routes/dashboardQuery.js');
 
 const app = restify.createServer();
 

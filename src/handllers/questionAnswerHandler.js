@@ -4,6 +4,8 @@ const { setUserState } = require('../services/stateManager');
 const { sendYesOrNo } = require('../handllers/mainHandler.js');
 const { decodeToken } = require('../middleware/tokenMiddleware');
 
+const { AiAnswer, AiQuestion } = require('../../models');
+
 
 const TIMEOUT_DURATION = 600000; 
 let timeoutId = null;
@@ -21,9 +23,23 @@ async function sendQuestion(fromNumber, messages, token) {
     try {
         const decodedToken = decodeToken(token);
         const doctorusername = decodedToken.username;  
+        const doc_id = decodedToken.doctor_user_id;  
         console.log("messages", messages);
+        await AiQuestion.create({
+            phoneNumber: fromNumber,
+            question: messages,
+            doc_user_id: doc_id
+        });
+
+
         const answer = await getAnaswer(messages, doctorusername, fromNumber);
         console.log("answer", answer.data.answer);
+        await AiAnswer.create({
+            phoneNumber: fromNumber,
+            answer: answer.data.answer,
+            doc_user_id: doc_id
+        });
+
         await sendWhatsAppMessage(fromNumber, answer.data.answer);
         
         if (timeoutId) {

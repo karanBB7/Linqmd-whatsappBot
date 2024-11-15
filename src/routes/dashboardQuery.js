@@ -1,6 +1,8 @@
 const mysql = require('mysql2');
 const { Sequelize } = require('sequelize');
 const { Feedback } = require('../../models');
+const { AiAnswer } = require('../../models');
+const { AiQuestion } = require('../../models');
 
 const db = mysql.createConnection({
   host: 'database-1.c16iememgraw.ap-south-1.rds.amazonaws.com',
@@ -144,6 +146,116 @@ function getFeedbackNumber(app) {
         }
     });
 
+    app.get('/getQandANumber/:userId', async (req, res) => {
+        const doc_user_id = req.params.userId;
+    
+        try {
+            const result = await AiQuestion.findAll({
+                attributes: [
+                    [Sequelize.fn('DISTINCT', Sequelize.col('phoneNumber')), 'phoneNumber'],
+                    [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('id'))), 'questionCount']
+                ],
+                where: { doc_user_id },
+                group: ['phoneNumber'],
+                raw: true
+            });
+    
+            const formattedResult = result.map(item => ({
+                phoneNumber: item.phoneNumber,
+            }));
+    
+            res.send({
+                success: true,
+                count: formattedResult.length,
+                data: formattedResult
+            });
+            
+        } catch (error) {
+            console.error('Error fetching AiQuestion numbers:', error);
+            res.status(500).send({ 
+                error: 'Internal Server Error',
+                message: error.message 
+            });
+        }
+    });
+
+
+    app.get('/getQuestion/:phoneNumber/:doctorId', async (req, res) => {
+        const fromNumber = req.params.phoneNumber;
+        const doc_user_id = req.params.doctorId;
+        try {
+            const questions = await AiQuestion.findAll({
+                attributes: ['question', 'updatedAt'],
+                where: { 
+                    phoneNumber: fromNumber,
+                    doc_user_id
+                },
+                order: [['id', 'DESC']],
+                raw: true
+            });
+    
+            const formattedQuestions = questions.map(question => ({
+                question: question.question,
+                timestamp: question.updatedAt
+            }));
+    
+            res.send({
+                success: true,
+                count: formattedQuestions.length,
+                data: formattedQuestions
+            });
+    
+        } catch (error) {
+            console.error('Error fetching AiQuestion:', error);
+            res.status(500).send({
+                error: 'Internal Server Error',
+                message: error.message
+            });
+        }
+    });
+
+    app.get('/getAnswer/:phoneNumber/:doctorId', async (req, res) => {
+        const fromNumber = req.params.phoneNumber;
+        const doc_user_id = req.params.doctorId;
+        try {
+            const answer = await AiAnswer.findAll({
+                attributes: ['answer', 'updatedAt'],
+                where: { 
+                    phoneNumber: fromNumber,
+                    doc_user_id
+                },
+                order: [['id', 'DESC']],
+                raw: true
+            });
+    
+            const formattedAnswers = answer.map(answer => ({
+                answer: answer.answer,
+                timestamp: answer.updatedAt
+            }));
+    
+            res.send({
+                success: true,
+                count: formattedAnswers.length,
+                data: formattedAnswers
+            });
+    
+        } catch (error) {
+            console.error('Error fetching AiAnswer:', error);
+            res.status(500).send({
+                error: 'Internal Server Error',
+                message: error.message
+            });
+        }
+    });
+
+
+
+
 }
+
+
+
+
+
 
 module.exports = { getCancled, getFeedbackNumber };

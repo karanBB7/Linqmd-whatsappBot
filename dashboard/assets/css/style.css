@@ -177,3 +177,45 @@
 
 
 
+
+
+.chat-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.message {
+    margin-bottom: 15px;
+}
+
+.message-bubble {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 12px;
+    max-width: 70%;
+    color: white;
+}
+
+.question {
+    text-align: left;
+}
+
+.question .message-bubble {
+    background-color: #1f2937;
+}
+
+.answer {
+    text-align: right;
+}
+
+.answer .message-bubble {
+    background-color: #065f5c;
+}
+
+.timestamp {
+    font-size: 11px;
+    color: #8b9398;
+    margin-top: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+}

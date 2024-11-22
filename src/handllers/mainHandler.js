@@ -1,7 +1,7 @@
 const { createToken, setUserToken } = require('../middleware/tokenMiddleware');
 const { sendWhatsAppMessage, sendListMessage } = require('../middleware/whatsappMiddleware');
 const { checkAppointment } = require('../services/viewService');
-const { setUserState} = require('../services/stateManager');
+const { setUserState,clearUserState} = require('../services/stateManager');
 const { otherAppointments } = require('../handllers/viewHandlers');
 const { captureOvercome } = require('../handllers/feedbackHandler');
 
@@ -35,15 +35,16 @@ const { captureOvercome } = require('../handllers/feedbackHandler');
                 await captureOvercome(fromNumber, token);
                 }
             } else {
-                // await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
+                await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
 
-                const listMessage = {
-                  title: 'Ask me anything',
-                  body: 'Please select the respective activity.',
-                  options: ['Ask Question']
-              };
-              await sendListMessage(fromNumber, listMessage);
-              setUserState(fromNumber, 'awaitingSelection');
+              //   const listMessage = {
+              //     title: 'Ask me anything',
+              //     body: 'Please select the respective activity.',
+              //     options: ['Ask Question']
+              // };
+              // await sendListMessage(fromNumber, listMessage);
+              // setUserState(fromNumber, 'awaitingSelection');
+              clearUserState(fromNumber);
 
             }
 

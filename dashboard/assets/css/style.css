@@ -1,6 +1,5 @@
 .table-container {
     padding: 10px;
-    height: 100vh;
 }
 
 .custom-table {
@@ -12,6 +11,7 @@
 .custom-table td {
     border: 1px solid #dee2e6;
     padding: 8px;
+    height: 80px;
 }
 
 .custom-table th {
@@ -93,8 +93,8 @@
 }
 
 .patient-list {
-    height: 300px;
-    overflow-y: auto;
+    /* height: 300px; */
+    /* overflow-y: auto; */
     width: 180px;
     text-align: center;
 }
@@ -143,7 +143,7 @@
 }
 
 
-.phonenumber{
+.phonenumber,.getCancledData{
     cursor: pointer;
 }
 
@@ -176,12 +176,19 @@
 
 
 
+.numberheight{
+    height: 50px;
+    overflow: auto;
+}
+
 
 
 
 .chat-container {
     max-width: 800px;
     margin: 0 auto;
+    overflow-x: hidden !important;
+    padding: 5px;
 }
 
 .message {

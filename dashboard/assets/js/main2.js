@@ -1,7 +1,8 @@
-$(document).ready(function () {
+$(document).ready(function() {
     const API_BASE = 'http://localhost:3002';
-    let clickType = '';
+    let dataTable;
 
+    // Utility Functions
     const formatTimeAndDate = timestamp => {
         const now = new Date();
         const time = new Date(timestamp);
@@ -23,89 +24,71 @@ $(document).ready(function () {
         $('.chatarea').html('Error loading data: ' + error);
     };
 
-    const getDoctorUid = () => {
-        const doctorUid = $('.doctor-select option:selected').val();
-        if (!doctorUid) {
-            alert('Please select a doctor first');
-            return false;
+    // Initialize DataTable
+    function initDataTable() {
+        if (dataTable) {
+            dataTable.destroy();
         }
-        return doctorUid;
-    };
+        dataTable = $('#doctorTable').DataTable({
+            paging: false,
+            searching: false,
+            info: false
+        });
+    }
 
-    $('.doctor-select').select2({
-        dropdownParent: $('.doctor-cell'),
-        placeholder: 'Select Doctor',
-        allowClear: false,
-        width: '100%'
-    }).on('select2:select', () => $('.patient-item').hide());
+    // Create row structure for each doctor
+    function createDoctorRow(doctor) {
+        return `
+            <tr data-doctor-id="${doctor.uid}">
+                <td class="doctor-cell">${doctor.username}</td>
+                <td class="reason-cell">
+                    <div class="appt-cancel patient-section">
+                        <div class="patient-section-header">Appointment Cancel</div>
+                    </div>
+                    <div class="feedback patient-section">
+                        <div class="patient-section-header">Feedback</div>
+                    </div>
+                    <div class="questions patient-section">
+                        <div class="patient-section-header">Questions</div>
+                    </div>
+                    <div class="others patient-section">
+                        <div class="patient-section-header">Others</div>
+                    </div>
+                </td>
+                <td class="patient-cell">
+                    <div class="appt-cancel patient-section">
+                        <div class="patient-numbers-wrapper"></div>
+                    </div>
+                    <div class="feedback patient-section">
+                        <div class="patient-numbers-wrapper"></div>
+                    </div>
+                    <div class="questions patient-section">
+                        <div class="patient-numbers-wrapper"></div>
+                    </div>
+                    <div class="others patient-section">
+                        <div class="patient-numbers-wrapper"></div>
+                    </div>
+                </td>
+                <td class="chat-cell">
+                    <div class="chatarea">
+                        Chat conversations are shown here
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
 
-    $.ajax({
-        url: `${API_BASE}/users`,
-        method: 'GET',
-        success: function(response) {
-            if (response.success && response.data.data) {
-                const selectElement = $('.doctor-select');
-                selectElement.find('option:not(:first)').remove();
-                response.data.data.forEach(doctor => {
-                    selectElement.append(`<option value="${doctor.uid}">${doctor.username}</option>`);
-                });
-            }
-        },
-        error: function(error) {
-            console.error('Error fetching doctors:', error);
-        }
-    });
-
-    $('.appt-cancel').click(function() {
-        $('.dateFilter').show();
-        $('.date-search-form').hide();
-        $('.chatnumber, .patientName').empty(); 
-        clickType = 'cancel';
-        $('.chatarea').empty();
-        loadList(`${API_BASE}/getCancled/`, 'No cancelled appointments found', true);
-    });
-    
-    $('.feedback').click(function() {
-        $('.dateFilter').hide();
-        $('.date-search-form').hide();
-        $('.chatnumber, .patientName').empty();
-        clickType = 'feedback';
-        $('.chatarea').empty();
-        loadList(`${API_BASE}/getFeedbackNumber/`, 'No feedback numbers found');
-    });
-    
-    $('.questions').click(function() {
-        $('.dateFilter').hide(); 
-        $('.date-search-form').hide();
-        $('.chatnumber, .patientName').empty();
-        clickType = 'questions';
-        loadList(`${API_BASE}/getQandANumber/`, 'No numbers found');
-    });
-    
-    $('.all').click(function() {
-        $('.dateFilter').hide(); 
-        $('.date-search-form').hide();
-        $('.chatnumber, .patientName').empty();
-        clickType = 'all';
-        $('.chatarea').empty();
-        loadList(`${API_BASE}/getPhone`, 'No numbers found', false, true);
-    });
-
-    function loadList(url, emptyMessage, isCancelled = false, isAll = false) {
-        const doctorUid = getDoctorUid();
-        if (!doctorUid) return;
-
+    // Load section numbers
+    function loadList(doctorUid, url, container, emptyMessage, isCancelled = false, isAll = false) {
         const apiUrl = isAll ? url : `${url}${doctorUid}`;
         
         $.ajax({
             url: apiUrl,
             method: 'GET',
             success: function(response) {
-                let container = $('.patient-item').parent();
-                $('.patient-item').remove();
+                container.empty();
                 
                 if (!response.data?.length && !response.numbers?.length && (!Array.isArray(response) || !response.length)) {
-                    container.append(`<div class="patient-item">${emptyMessage}</div>`);
                     return;
                 }
 
@@ -114,49 +97,91 @@ $(document).ready(function () {
                     const number = item.fromNumber || item.phoneNumber || item.mobile_number || item;
                     const className = isCancelled ? 'getCancledData' : 'phonenumber';
                     const dataAttr = isCancelled ? `data-id="${item.id}"` : '';
-                    container.append(`<div class="patient-item ${className}" ${dataAttr}>${number}</div>`);
+                    const sectionClass = container.closest('.patient-section').attr('class').split(' ')[0];
+                    container.append(`<div class="patient-number ${className}" ${dataAttr} data-section="${sectionClass}">${number}</div>`);
                 });
             },
             error: handleApiError
         });
     }
 
-    $(document).on('click', '.phonenumber, .getCancledData', function() {
-        $('.chatnumber, .patientName').empty();
-        const number = $(this).text().trim();
-        const doctorUid = getDoctorUid();
-        if (!doctorUid) return;
+    // Load all sections for a doctor row
+    function loadAllSections(doctorRow) {
+        const doctorUid = doctorRow.data('doctor-id');
 
+        // Load Appointment Cancel numbers
+        loadList(doctorUid, `${API_BASE}/getCancled/`, 
+            doctorRow.find('.appt-cancel .patient-numbers-wrapper'), 
+            'No cancelled appointments found', 
+            true
+        );
+
+        // Load Feedback numbers
+        loadList(doctorUid, `${API_BASE}/getFeedbackNumber/`, 
+            doctorRow.find('.feedback .patient-numbers-wrapper'), 
+            'No feedback numbers found'
+        );
+
+        // Load Questions numbers
+        loadList(doctorUid, `${API_BASE}/getQandANumber/`, 
+            doctorRow.find('.questions .patient-numbers-wrapper'), 
+            'No numbers found'
+        );
+
+        // Load Others numbers
+        loadList(doctorUid, `${API_BASE}/getPhone`, 
+            doctorRow.find('.others .patient-numbers-wrapper'), 
+            'No numbers found', 
+            false, 
+            true
+        );
+    }
+
+    // Handle number clicks based on section
+    function handleNumberClick(element) {
+        const number = $(element).text().trim();
+        const doctorRow = $(element).closest('tr');
+        const doctorUid = doctorRow.data('doctor-id');
+        const chatArea = doctorRow.find('.chatarea');
+        const section = $(element).data('section');
+
+        // Get patient name
         $.ajax({
             url: `${API_BASE}/getName/${number}`,
             method: 'GET',
             success: function(response) {
-                $('.chatnumber').text(number);
-                $('.patientName').text(response.patient_name);
+                // Handle displaying name if needed
             }
         });
 
-        if (clickType === 'feedback') {
-            handleFeedback(number, doctorUid);
-        } else if (clickType === 'questions') {
-            handleQuestions(number, doctorUid);
-        } else if (clickType === 'all') {
-            handleAllChat(number);
-        } else if (clickType === 'cancel') {
-            handleCancelDetails($(this).data('id'));
+        // Handle different sections
+        switch(section) {
+            case 'appt-cancel':
+                handleCancelDetails($(element).data('id'), chatArea);
+                break;
+            case 'feedback':
+                handleFeedback(number, doctorUid, chatArea);
+                break;
+            case 'questions':
+                handleQuestions(number, doctorUid, chatArea);
+                break;
+            case 'others':
+                handleAllChat(number, chatArea);
+                break;
         }
-    });
+    }
 
-    function handleFeedback(number, doctorUid) {
+    // Handle specific chat types
+    function handleFeedback(number, doctorUid, chatArea) {
         $.ajax({
             url: `${API_BASE}/getFeedback/${number}/${doctorUid}`,
             method: 'GET',
             success: function(response) {
-                const chatarea = $('.chatarea').empty();
+                chatArea.empty();
                 response.feedbacks.forEach(feedback => {
                     if (feedback.rating || feedback.feedback || feedback.reasonForVisit) {
                         const { dateStr, timeAgo } = formatTimeAndDate(feedback.timeStamp);
-                        chatarea.append(`
+                        chatArea.append(`
                             <div class="feedbackWrapper">
                                 <div class="timestamp">
                                     <span class="timeago">(${timeAgo})</span>
@@ -174,8 +199,8 @@ $(document).ready(function () {
         });
     }
 
-    function handleQuestions(number, doctorUid) {
-        const $chatContainer = $('.chatarea').empty().append('<div>Loading chat history...</div>');
+    function handleQuestions(number, doctorUid, chatArea) {
+        chatArea.empty().append('<div>Loading chat history...</div>');
         
         $.when(
             $.ajax({url: `${API_BASE}/getQuestion/${number}/${doctorUid}`, method: 'GET'}),
@@ -186,12 +211,12 @@ $(document).ready(function () {
                 ...answerResponse[0].data.map(a => ({type: 'answer', text: a.answer, time: new Date(a.timestamp)}))
             ].sort((a, b) => a.time - b.time);
 
-            renderMessages($chatContainer, messages);
+            renderMessages(chatArea, messages);
         }).fail(handleApiError);
     }
 
-    function handleAllChat(number) {
-        const $chatContainer = $('.chatarea').empty().append('<div>Loading chat history...</div>');
+    function handleAllChat(number, chatArea) {
+        chatArea.empty().append('<div>Loading chat history...</div>');
         
         $.when(
             $.ajax({url: `${API_BASE}/getSentChat/${number}`, method: 'GET'}),
@@ -210,11 +235,11 @@ $(document).ready(function () {
                 }))
             ].filter(m => m.text).sort((a, b) => b.time - a.time);
 
-            renderMessages($chatContainer, messages, true);
+            renderMessages(chatArea, messages, true);
         }).fail(handleApiError);
     }
 
-    function handleCancelDetails(bookingId) {
+    function handleCancelDetails(bookingId, chatArea) {
         $.ajax({
             url: `${API_BASE}/getCancledDetails/${bookingId}`,
             method: 'GET',
@@ -223,7 +248,7 @@ $(document).ready(function () {
                 const createdDateFormat = formatTimeAndDate(booking.created_date);
                 const bookingDateFormat = formatTimeAndDate(booking.booking_date);
                 
-                $('.chatarea').empty().append(`
+                chatArea.empty().append(`
                     <div class="feedbackWrapper">
                         <div><span class="fw-bold fs-6">Booking Id: </span>${booking.id}</div>
                         <div><span class="fw-bold fs-6">Patient Name: </span>${booking.patient_name}</div>
@@ -275,60 +300,53 @@ $(document).ready(function () {
         });
     }
 
+    // Bind global events
+    function bindEvents() {
+        // Patient number click handler
+        $('#doctorTableBody').on('click', '.patient-number', function() {
+            $('.patient-number').removeClass('selected');
+            $(this).addClass('selected');
+            handleNumberClick(this);
+        });
 
-    $('.date-search-form').submit(function(e) {
-        e.preventDefault();
-        const doctorUid = $('.doctor-select option:selected').val();
-        const startDate = $('#startDate').val();
-        const endDate = $('#endDate').val();
-        
-        if (!startDate || !endDate) {
-            alert('Please select both dates');
-            return;
-        }
-    
+        // Scroll handler for patient sections
+        $('#doctorTableBody').on('scroll', '.patient-numbers-wrapper', function(e) {
+            e.stopPropagation();
+        });
+    }
+
+    // Fetch and display doctors
+    function fetchDoctors() {
         $.ajax({
-            url: `${API_BASE}/getCancledByDateRange/${doctorUid}`,
+            url: `${API_BASE}/users`,
             method: 'GET',
-            data: {
-                startDate: startDate,
-                endDate: endDate
-            },
             success: function(response) {
-                let container = $('.patient-item').parent();
-                $('.patient-item').remove();
-                
-                if (Array.isArray(response)) {
-                    response.forEach(item => {
-                        container.append(`<div class="patient-item getCancledData" data-id="${item.id}">${item.mobile_number}</div>`);
+                if (response.success && response.data.data) {
+                    const tbody = $('#doctorTableBody');
+                    tbody.empty();
+                    
+                    response.data.data.forEach(doctor => {
+                        const row = $(createDoctorRow(doctor));
+                        tbody.append(row);
+                        loadAllSections(row); // Load all sections immediately
                     });
-                } else if (response.message) {
-                    container.append(`<div class="patient-item">${response.message}</div>`);
+                    
+                    initDataTable();
                 }
-    
-                $('#startDate').val('');  
-                $('#endDate').val('');    
-
             },
             error: function(error) {
-                console.error('Error:', error);
-                $('.patient-item').html('Error loading data: ' + error);
+                console.error('Error fetching doctors:', error);
+                const tbody = $('#doctorTableBody');
+                tbody.empty();
+                const row = $(createDoctorRow({ username: 'Unknown', uid: 'unknown' }));
+                tbody.append(row);
+                loadAllSections(row); // Load all sections immediately
+                initDataTable();
             }
         });
-    });
+    }
 
-    $('.dateFilter').click(function(){
-        const $form = $('.date-search-form');
-        const $this = $(this);
-        
-        if($form.is(':hidden')) {
-            $form.show();
-            $this.text('Hide Date Filter');
-        } else {
-            $form.hide();
-            $this.text('Show Date Filter');
-        }
-    });
-
-
+    // Initialize
+    fetchDoctors();
+    bindEvents();
 });

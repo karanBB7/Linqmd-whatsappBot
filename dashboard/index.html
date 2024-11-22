@@ -1,64 +1,30 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style2.css">
 </head>
-
 <body>
     <div class="table-container">
-        <table class="custom-table">
+        <table id="doctorTable" class="custom-table">
             <thead>
                 <tr>
                     <th>Doctor</th>
                     <th>Reason</th>
                     <th>Patient</th>
-                    <th class="chatnumber"></th>
+                    <th>Chat</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td class="doctor-cell">
-                        <select class="doctor-select">
-                            <option value="" selected disabled>Select Doctor</option>
-                        </select>
-                    </td>
-
-
-                    <td class="reason-cell">
-                        <div class="reason-item appt-cancel">Appointment Cancel</div>
-                        <div class="reason-item feedback">Feedback</div>
-                        <div class="reason-item questions">Questions</div>
-                        <div class="reason-item others">All</div>
-                    </td>
-                    <td class="patient-cell">
-                        <div class="patient-list">
-                            <div class="patient-item"></div>
-
-                        </div>
-                    </td>
-                    <td class="chat-cell">
-
-                        <div class="chatarea">
-
-                            
-
-
-
-                        </div>
-
-                    </td>
-                </tr>
+            <tbody id="doctorTableBody">
+                <!-- Doctors will be populated here dynamically -->
             </tbody>
         </table>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/js/main2.js"></script>
 </body>
-
 </html>

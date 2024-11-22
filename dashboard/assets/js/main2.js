@@ -3,9 +3,16 @@ $(document).ready(function () {
     let dataTable;
     let allDoctors = [];
 
+    function showLoader() {
+        $('#loader').show();
+    }
+
+    function hideLoader() {
+        $('#loader').hide();
+    }
 
 
-    
+
     const formatTimeAndDate = timestamp => {
         const now = new Date();
         const time = new Date(timestamp);
@@ -25,12 +32,22 @@ $(document).ready(function () {
         };
     };
 
+
+
+
+
     const handleApiError = error => {
         console.error('API Error:', error);
-        $('.chatarea').html('Error loading data: ' + error);
+        let errorMessage = 'Error loading data';
+
+        if (error.responseJSON && error.responseJSON.message) {
+            errorMessage += ': ' + error.responseJSON.message;
+        } else if (error.statusText) {
+            errorMessage += ': ' + error.statusText;
+        }
+
+        $('.chatarea').html(errorMessage);
     };
-
-
 
 
 
@@ -50,7 +67,6 @@ $(document).ready(function () {
         }]
         });
     }
-
 
 
 
@@ -102,10 +118,11 @@ $(document).ready(function () {
     }
 
 
-    
-    
+
+
     function loadList(doctorUid, url, container, emptyMessage, isCancelled = false, isAll = false) {
         const apiUrl = isAll ? url : `${url}${doctorUid}`;
+        showLoader();
 
         $.ajax({
             url: apiUrl,
@@ -114,48 +131,77 @@ $(document).ready(function () {
                 container.empty();
 
                 if (!response.data?.length && !response.numbers?.length && (!Array.isArray(response) || !response.length)) {
+                    hideLoader();
                     return;
                 }
 
                 const items = isAll ? response.data : (response.data || response.numbers || response);
+                const totalItems = items.length;
+                let completedItems = 0;
+
                 items.forEach(item => {
                     const number = item.fromNumber || item.phoneNumber || item.mobile_number || item;
                     const className = isCancelled ? 'getCancledData' : 'phonenumber';
                     const dataAttr = isCancelled ? `data-id="${item.id}"` : '';
                     const sectionClass = container.closest('.patient-section').attr('class').split(' ')[0];
-                    container.append(`<div class="patient-number ${className}" ${dataAttr} data-section="${sectionClass}">${number}</div>`);
+
+                    const $element = $(`<div class="patient-number ${className}" ${dataAttr} data-section="${sectionClass}">
+                    <span class="number-part">${number}</span>
+                    <span class="name-part"></span>
+                </div>`);
+
+                    container.append($element);
+
+                    showLoader();
+                    $.ajax({
+                        url: `${API_BASE}/getName/${number}`,
+                        method: 'GET',
+                        success: function (nameResponse) {
+                            if (nameResponse.patient_name) {
+                                $element.find('.name-part').text(` (${nameResponse.patient_name})`);
+                            }
+                        },
+                        complete: function () {
+                            completedItems++;
+                            hideLoader();
+                            if (completedItems === totalItems) {
+                                hideLoader();
+                            }
+                        }
+                    });
                 });
             },
-            error: handleApiError
+            error: function (error) {
+                handleApiError(error);
+                hideLoader();
+            }
         });
     }
 
 
-    
-    
-    
+
+
     function loadAllSections(doctorRow) {
         const doctorUid = doctorRow.data('doctor-id');
 
+        showLoader();
 
+        // Load all sections
         loadList(doctorUid, `${API_BASE}/getCancled/`,
             doctorRow.find('.appt-cancel .patient-numbers-wrapper'),
             'No cancelled appointments found',
             true
         );
 
-
         loadList(doctorUid, `${API_BASE}/getFeedbackNumber/`,
             doctorRow.find('.feedback .patient-numbers-wrapper'),
             'No feedback numbers found'
         );
 
-
         loadList(doctorUid, `${API_BASE}/getQandANumber/`,
             doctorRow.find('.questions .patient-numbers-wrapper'),
             'No numbers found'
         );
-
 
         loadList(doctorUid, `${API_BASE}/getPhone`,
             doctorRow.find('.others .patient-numbers-wrapper'),
@@ -166,24 +212,14 @@ $(document).ready(function () {
     }
 
 
-    
-    
+
+
     function handleNumberClick(element) {
-        const number = $(element).text().trim();
+        const number = $(element).find('.number-part').text().trim();
         const doctorRow = $(element).closest('tr');
         const doctorUid = doctorRow.data('doctor-id');
         const chatArea = doctorRow.find('.chatarea');
         const section = $(element).data('section');
-
-
-        $.ajax({
-            url: `${API_BASE}/getName/${number}`,
-            method: 'GET',
-            success: function (response) {
-
-            }
-        });
-
 
         switch (section) {
             case 'appt-cancel':
@@ -202,14 +238,21 @@ $(document).ready(function () {
     }
 
 
-    
-    
+
+
+
     function handleFeedback(number, doctorUid, chatArea) {
+        showLoader();
         $.ajax({
             url: `${API_BASE}/getFeedback/${number}/${doctorUid}`,
             method: 'GET',
             success: function (response) {
                 chatArea.empty();
+                if (!response.feedbacks || !response.feedbacks.length) {
+                    chatArea.append('<div>No feedback found</div>');
+                    return;
+                }
+
                 response.feedbacks.forEach(feedback => {
                     if (feedback.rating || feedback.feedback || feedback.reasonForVisit) {
                         const {
@@ -217,25 +260,27 @@ $(document).ready(function () {
                             timeAgo
                         } = formatTimeAndDate(feedback.timeStamp);
                         chatArea.append(`
-                            <div class="feedbackWrapper">
-                                <div class="timestamp">
-                                    <span class="timeago">(${timeAgo})</span>
-                                    <span class="date">${dateStr}</span> 
-                                </div>
-                                ${feedback.rating ? `<div class="rating"><span class="feedbacktitle">Recomendation score: </span>${feedback.rating}</div>` : ''}
-                                ${feedback.feedback ? `<div class="feedbackMessage"><span class="feedbacktitle">Feedback: </span>${feedback.feedback}</div>` : ''}
-                                ${feedback.reasonForVisit ? `<div class="visit"><span class="feedbacktitle">Reason for visit: </span>${feedback.reasonForVisit}</div>` : ''}
+                        <div class="feedbackWrapper">
+                            <div class="timestamp">
+                                <span class="timeago">(${timeAgo})</span>
+                                <span class="date">${dateStr}</span> 
                             </div>
-                        `);
+                            ${feedback.rating ? `<div class="rating"><span class="feedbacktitle">Recomendation score: </span>${feedback.rating}</div>` : ''}
+                            ${feedback.feedback ? `<div class="feedbackMessage"><span class="feedbacktitle">Feedback: </span>${feedback.feedback}</div>` : ''}
+                            ${feedback.reasonForVisit ? `<div class="visit"><span class="feedbacktitle">Reason for visit: </span>${feedback.reasonForVisit}</div>` : ''}
+                        </div>
+                    `);
                     }
                 });
             },
-            error: handleApiError
+            error: handleApiError,
+            complete: function () {
+                hideLoader();
+            }
         });
     }
-    
-    
-    
+
+
 
     function handleQuestions(number, doctorUid, chatArea) {
         chatArea.empty().append('<div>Loading chat history...</div>');
@@ -250,25 +295,31 @@ $(document).ready(function () {
                 method: 'GET'
             })
         ).then(function (questionResponse, answerResponse) {
-            const messages = [
-                ...questionResponse[0].data.map(q => ({
-                    type: 'question',
-                    text: q.question,
-                    time: new Date(q.timestamp)
-                })),
-                ...answerResponse[0].data.map(a => ({
-                    type: 'answer',
-                    text: a.answer,
-                    time: new Date(a.timestamp)
-                }))
+            try {
+                const messages = [
+                ...(questionResponse[0].data || []).map(q => ({
+                        type: 'question',
+                        text: q.question,
+                        time: new Date(q.timestamp)
+                    })),
+                ...(answerResponse[0].data || []).map(a => ({
+                        type: 'answer',
+                        text: a.answer,
+                        time: new Date(a.timestamp)
+                    }))
             ].sort((a, b) => a.time - b.time);
 
-            renderMessages(chatArea, messages);
-        }).fail(handleApiError);
+                renderMessages(chatArea, messages);
+            } catch (err) {
+                chatArea.empty().append('<div>Error processing chat data</div>');
+                console.error('Error processing chat data:', err);
+            }
+        }).fail(function (error) {
+            handleApiError(error);
+        });
     }
-    
-    
-    
+
+
 
     function handleAllChat(number, chatArea) {
         chatArea.empty().append('<div>Loading chat history...</div>');
@@ -300,9 +351,9 @@ $(document).ready(function () {
         }).fail(handleApiError);
     }
 
-    
-    
-    
+
+
+
     function handleCancelDetails(bookingId, chatArea) {
         $.ajax({
             url: `${API_BASE}/getCancledDetails/${bookingId}`,
@@ -331,8 +382,8 @@ $(document).ready(function () {
         });
     }
 
-    
-    
+
+
     function renderMessages($container, messages, addWrapper = false) {
         $container.empty();
         if (!messages.length) {
@@ -365,9 +416,9 @@ $(document).ready(function () {
             `);
         });
     }
-    
-    
-    
+
+
+
 
 
     function bindEvents() {
@@ -383,8 +434,8 @@ $(document).ready(function () {
     }
 
 
-    
-    
+
+
 
     function renderDoctors(doctors) {
         const tbody = $('#doctorTableBody');
@@ -403,8 +454,8 @@ $(document).ready(function () {
         }
     }
 
-    
-    
+
+
     function setupDoctorColumnClick() {
         $('#doctorTable thead th:first-child').off('click').on('click', function () {
             if (allDoctors.length > 0) {
@@ -416,8 +467,9 @@ $(document).ready(function () {
     }
 
 
-    
+
     function fetchDoctors() {
+        showLoader();
         $.ajax({
             url: `${API_BASE}/users`,
             method: 'GET',
@@ -447,80 +499,96 @@ $(document).ready(function () {
 
 
 
-function setupPhoneSearch() {
-    $('#phoneSearch').on('input', function() {
-        const searchTerm = $(this).val().trim().toLowerCase();
-        
-        $('.patient-number').removeClass('highlight');
-        $('.chatarea').html('Chat conversations are shown here');
-        
-        if (!searchTerm) {
-            $('#doctorTableBody tr').show();
-            $('.patient-number').show();
+    function setupPhoneSearch() {
+        $('#phoneSearch').on('input', function () {
+            const searchTerm = $(this).val().trim().toLowerCase();
+
+            $('.patient-number').removeClass('highlight');
+            $('.chatarea').html('Chat conversations are shown here');
+
+            if (!searchTerm) {
+                $('#doctorTableBody tr').show();
+                $('.patient-number').show();
+                $('.no-results-message').remove();
+                return;
+            }
+
             $('.no-results-message').remove();
-            return;
-        }
+            $('#doctorTableBody tr').hide();
+            $('.patient-number').hide();
 
-        $('.no-results-message').remove();
+            let matchFound = false;
 
-        $('#doctorTableBody tr').hide();
-        
-        $('.patient-number').hide();
-        
-        let matchFound = false;
-        
-        $('.patient-number').each(function() {
-            const number = $(this).text().trim().toLowerCase();
-            if (number.includes(searchTerm)) {
-                matchFound = true;
-                $(this).addClass('highlight').show();  
-                $(this).closest('tr').show();         
+            $('.patient-number').each(function () {
+                const number = $(this).find('.number-part').text().trim().toLowerCase();
+                const name = $(this).find('.name-part').text().trim().toLowerCase();
+                const fullText = $(this).text().trim().toLowerCase();
+
+                if (number.includes(searchTerm) || name.includes(searchTerm)) {
+                    matchFound = true;
+                    $(this).addClass('highlight').show();
+                    $(this).closest('tr').show();
+                }
+            });
+
+            if (!matchFound) {
+                $('#doctorTable').after(
+                    `<div class="no-results-message alert alert-info mt-3">
+                    No data found with the number/name "${searchTerm}"
+                </div>`
+                );
+                $('.chatarea').html('Chat conversations are shown here');
+            } else {
+                const firstMatch = $('.patient-number.highlight').first();
+                if (firstMatch.length) {
+                    firstMatch.trigger('click');
+
+                    const container = firstMatch.closest('.patient-numbers-wrapper');
+                    if (container.length) {
+                        container.scrollTop(
+                            firstMatch.position().top - container.position().top
+                        );
+                    }
+                }
             }
         });
 
-        if (!matchFound) {
-            $('#doctorTable').after(
-                `<div class="no-results-message alert alert-info mt-3">
-                    No data found with the number "${searchTerm}"
-                </div>`
-            );
-            // Ensure chat area is reset
-            $('.chatarea').html('Chat conversations are shown here');
-        } else {
-            // Show first match details
-            const firstMatch = $('.patient-number.highlight').first();
-            if (firstMatch.length) {
-                firstMatch.trigger('click');
-                
-                // Scroll to match
-                const container = firstMatch.closest('.patient-numbers-wrapper');
-                if (container.length) {
-                    container.scrollTop(
-                        firstMatch.position().top - container.position().top
-                    );
-                }
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.patient-number').length) {
+                $('.chatarea').html('Chat conversations are shown here');
             }
-        }
-    });
+        });
+    }
 
-    // Also reset chat area when clicking outside of patient numbers
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.patient-number').length) {
-            $('.chatarea').html('Chat conversations are shown here');
-        }
-    });
-}
 
+    function setupDoctorSearch() {
+        $('#doctorSearch').on('input', function () {
+            const searchTerm = $(this).val().trim().toLowerCase();
+
+            $('#doctorTableBody tr').each(function () {
+                const doctorName = $(this).find('.doctor-cell').text().trim().toLowerCase();
+
+                if (doctorName.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            if (!searchTerm) {
+                $('#doctorTableBody tr').show();
+            }
+        });
+    }
 
 
     function initialize() {
-        // Add styles
-        // Initialize components
+
         fetchDoctors();
         bindEvents();
         setupPhoneSearch();
+        setupDoctorSearch();
     }
 
-    // Call initialize instead of individual functions
     initialize();
 });

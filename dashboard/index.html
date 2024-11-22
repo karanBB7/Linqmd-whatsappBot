@@ -13,7 +13,11 @@
         <table id="doctorTable" class="custom-table">
             <thead>
                 <tr>
-                    <th class="doc">Doctor</th>
+                    <th class="doc">Doctor
+                         <div class="search-cell-doctor">
+                            <input type="text" id="doctorSearch" class="doctor-search" placeholder="Doctor phone...">
+                        </div>
+                    </th>
                     <th class="reason">Reason</th>
                     <th class="patient">
                         Patient
@@ -25,10 +29,16 @@
                 </tr>
             </thead>
             <tbody id="doctorTableBody">
-                <!-- Doctors will be populated here dynamically -->
             </tbody>
         </table>
     </div>
+    
+    <div id="loader" class="loader-overlay" style="display: none;">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+</div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>

@@ -1,6 +1,7 @@
 $(document).ready(function() {
     const API_BASE = 'http://localhost:3002';
     let dataTable;
+    let allDoctors = [];
 
     // Utility Functions
     const formatTimeAndDate = timestamp => {
@@ -23,18 +24,27 @@ $(document).ready(function() {
         console.error('API Error:', error);
         $('.chatarea').html('Error loading data: ' + error);
     };
-
-    // Initialize DataTable
-    function initDataTable() {
+    
+    
+    
+function initDataTable() {
+  function initDataTable() {
         if (dataTable) {
             dataTable.destroy();
         }
+        
         dataTable = $('#doctorTable').DataTable({
             paging: false,
             searching: false,
-            info: false
+            info: false,
+            order: [], // Disable initial sorting
+            columnDefs: [{
+                targets: [0], // Target the Doctor column
+                orderable: true
+            }]
         });
     }
+}
 
     // Create row structure for each doctor
     function createDoctorRow(doctor) {
@@ -316,35 +326,71 @@ $(document).ready(function() {
     }
 
     // Fetch and display doctors
+    
+    
+    function renderDoctors(doctors) {
+        const tbody = $('#doctorTableBody');
+        tbody.empty();
+        
+        doctors.forEach(doctor => {
+            const row = $(createDoctorRow(doctor));
+            tbody.append(row);
+            loadAllSections(row);
+        });
+        
+        // Redraw the table without sorting
+        if (dataTable) {
+            dataTable.draw(false);
+        }
+    }
+
+    // Add click handler for Doctor column header
+    function setupDoctorColumnClick() {
+        $('#doctorTable thead th:first-child').off('click').on('click', function() {
+            if (allDoctors.length > 0) {
+                // Take first doctor and move to end
+                const firstDoctor = allDoctors.shift();
+                allDoctors.push(firstDoctor);
+                
+                // Render doctors in new order
+                renderDoctors(allDoctors);
+            }
+        });
+    }
+
+    // Fetch and display doctors
     function fetchDoctors() {
         $.ajax({
             url: `${API_BASE}/users`,
             method: 'GET',
             success: function(response) {
                 if (response.success && response.data.data) {
-                    const tbody = $('#doctorTableBody');
-                    tbody.empty();
+                    // Store all doctors
+                    allDoctors = response.data.data;
                     
-                    response.data.data.forEach(doctor => {
-                        const row = $(createDoctorRow(doctor));
-                        tbody.append(row);
-                        loadAllSections(row); // Load all sections immediately
-                    });
+                    // Initial render
+                    renderDoctors(allDoctors);
                     
+                    // Initialize DataTable after rendering
                     initDataTable();
+                    
+                    // Setup click handler
+                    setupDoctorColumnClick();
                 }
             },
             error: function(error) {
                 console.error('Error fetching doctors:', error);
                 const tbody = $('#doctorTableBody');
                 tbody.empty();
-                const row = $(createDoctorRow({ username: 'Unknown', uid: 'unknown' }));
-                tbody.append(row);
-                loadAllSections(row); // Load all sections immediately
+                allDoctors = [{ username: 'Unknown', uid: 'unknown' }];
+                
+                renderDoctors(allDoctors);
                 initDataTable();
+                setupDoctorColumnClick();
             }
         });
     }
+
 
     // Initialize
     fetchDoctors();

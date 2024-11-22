@@ -1,233 +1,299 @@
-        /* Previous styles remain the same */
-        .table-container {
-            padding: 20px;
-        }
+/* Previous styles remain the same */
+.table-container {
+    padding: 20px;
+}
 
-        .custom-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-        }
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
 
-        .custom-table th {
-            background: #fff;
-            padding: 12px;
-            border: 1px solid #dee2e6;
-            position: relative;
-        }
-
-        .custom-table th.doc {
-            padding-right: 30px;
-            /* Make space for the dropdown icon */
-            cursor: pointer;
-        }
-
-        .custom-table th.doc::after {
-            content: "▼";
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
-        }
-
-        .custom-table td {
-            padding: 0;
-            border: 1px solid #dee2e6;
-            vertical-align: top;
-        }
-
-        .doctor-cell {
-            width: 200px;
-            padding: 12px !important;
-        }
-
-        .dr-balachandra {
-            background: #E3F2FD;
-        }
-
-        .dr-gayatri {
-            background: #90CAF9;
-        }
-
-        .unknown {
-            background: #1976D2;
-            color: white;
-        }
-
-        .reason-cell {
-            width: 200px;
-        }
-
-        .patient-section {
-            border-bottom: 1px solid #dee2e6;
-            height: 100px;
-            margin: 0;
-            /* Add this */
-        }
-
-        .patient-section:last-child {
-            border-bottom: none;
-            /* Add this */
-        }
+.custom-table th {
+    background: #fff;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    position: relative;
+}
 
 
-        .patient-section-header {
-            padding: 12px;
-            font-weight: 500;
-        }
+/* Add these styles to your CSS */
 
-        .appt-cancel .patient-section-header {
-            background: #FFEBEE;
-        }
+#doctorTable th.doc {
+    width: 15%;
+    min-width: 120px;
+}
 
-        .feedback .patient-section-header {
-            background: #E8F5E9;
-        }
+#doctorTable th:nth-child(2) { /* Reason column */
+    width: 15%;
+    min-width: 120px;
+}
 
-        .questions .patient-section-header {
-            background: #E3F2FD;
-        }
+#doctorTable th:nth-child(3) { /* Patient column */
+    width: 15%;
+    min-width: 200px;
+}
 
-        .others .patient-section-header {
-            background: #EEEEEE;
-        }
+#doctorTable th:nth-child(4) { /* Chat column */
+    width: 45%;
+    min-width: 300px;
+}
 
-        .patient-numbers-wrapper {
-            max-height: 100px;
-            overflow-y: auto;
-            background: white;
-            margin: 0;
-        }
+/* Ensure the search input takes full width of its container */
+.search-cell {
+    width: 100%;
+    padding: 8px 0;
+}
 
-        .patient-number {
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-        }
+.phone-search {
+    width: 100%;
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
 
-        .patient-number:hover {
-            background: #f5f5f5;
-        }
+/* Ensure table maintains layout */
+#doctorTable {
+    table-layout: fixed;
+    width: 100%;
+}
 
-        .patient-number.selected {
-            background: #e3f2fd;
-        }
+/* Make cells handle overflow properly */
+#doctorTable td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-        .chat-cell {
-            width: calc(100% - 600px);
-        }
+/* Allow chat area to wrap */
+#doctorTable td.chat-cell {
+    white-space: normal;
+}
 
-        .chatarea {
-            padding: 15px;
-            min-height: auto;
-            /* Change this */
-            height: auto;
-            /* Change this */
-        }
-
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+/* Make the table horizontally scrollable on smaller screens */
+.table-container {
+    overflow-x: auto;
+}
 
 
 
+.custom-table th.doc {
+    padding-right: 30px;
+    /* Make space for the dropdown icon */
+    cursor: pointer;
+}
+
+.custom-table th.doc::after {
+    content: "▼";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.custom-table td {
+    padding: 0;
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.doctor-cell {
+    width: 200px;
+    padding: 12px !important;
+}
+
+.dr-balachandra {
+    background: #E3F2FD;
+}
+
+.dr-gayatri {
+    background: #90CAF9;
+}
+
+.unknown {
+    background: #1976D2;
+    color: white;
+}
+
+.reason-cell {
+    width: 200px;
+}
+
+.patient-section {
+    border-bottom: 1px solid #dee2e6;
+    height: 100px;
+    margin: 0;
+    /* Add this */
+}
+
+.patient-section:last-child {
+    border-bottom: none;
+    /* Add this */
+}
 
 
-        .feedbackWrapper {
-            width: 100%;
-            border: 1px solid rgb(0, 0, 0);
-            padding: 5px;
-            margin-top: 10px;
-        }
+.patient-section-header {
+    padding: 12px;
+    font-weight: 500;
+}
 
-        .feedbacktitle {
-            font-weight: bold;
-            font-size: 12px;
-        }
+.appt-cancel .patient-section-header {
+    background: #FFEBEE;
+    height: 100px;
+}
 
-        .timeago {
-            font-size: 10px;
-            color: green;
-            text-align: right;
-        }
+.feedback .patient-section-header {
+    background: #E8F5E9;
+    height: 100px;
+}
+
+.questions .patient-section-header {
+    background: #E3F2FD;
+    height: 100px;
+}
+
+.others .patient-section-header {
+    background: #EEEEEE;
+    height: 100px;
+}
+
+.patient-numbers-wrapper {
+    max-height: 100px;
+    overflow-y: auto;
+    background: white;
+    margin: 0;
+}
+
+.patient-number {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.patient-number:hover {
+    background: #f5f5f5;
+}
+
+.patient-number.selected {
+    background: #e3f2fd;
+}
+
+.chat-cell {
+    width: calc(100% - 600px);
+}
+
+.chatarea {
+    padding: 15px;
+    min-height: auto;
+    /* Change this */
+    height: auto;
+    /* Change this */
+}
 
 
-        .date {
-            font-size: 11px;
-            color: #6672ff;
-            text-align: right;
-            font-weight: bold;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
 
-        }
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
 
 
 
-        .numberheight {
-            height: 50px;
-            overflow: auto;
-        }
+
+
+.feedbackWrapper {
+    width: 100%;
+    border: 1px solid rgb(0, 0, 0);
+    padding: 5px;
+    margin-top: 10px;
+}
+
+.feedbacktitle {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.timeago {
+    font-size: 10px;
+    color: green;
+    text-align: right;
+}
+
+
+.date {
+    font-size: 11px;
+    color: #6672ff;
+    text-align: right;
+    font-weight: bold;
+
+}
+
+
+
+.numberheight {
+    height: 50px;
+    overflow: auto;
+}
 
 
 
 
-        .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
-            overflow-x: hidden !important;
-            padding: 5px;
-        }
+.chat-container {
+    max-width: 800px;
+    margin: 0 auto;
+    overflow-x: hidden !important;
+    padding: 5px;
+}
 
-        .message {
-            margin-bottom: 15px;
-        }
+.message {
+    margin-bottom: 15px;
+}
 
-        .message-bubble {
-            display: inline-block;
-            padding: 8px 15px;
-            border-radius: 12px;
-            max-width: 70%;
-            color: white;
-        }
+.message-bubble {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 12px;
+    max-width: 70%;
+    color: white;
+}
 
-        .question {
-            text-align: left;
-        }
+.question {
+    text-align: left;
+}
 
-        .question .message-bubble {
-            background-color: #1f2937;
-        }
+.question .message-bubble {
+    background-color: #1f2937;
+}
 
-        .answer {
-            text-align: right;
-        }
+.answer {
+    text-align: right;
+}
 
-        .answer .message-bubble {
-            background-color: #065f5c;
-        }
+.answer .message-bubble {
+    background-color: #065f5c;
+}
 
-        .timestamp {
-            font-size: 11px;
-            color: #8b9398;
-            margin-top: 4px;
-            padding-left: 10px;
-            padding-right: 10px;
-        }
+.timestamp {
+    font-size: 11px;
+    color: #8b9398;
+    margin-top: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
 
 
 
@@ -249,7 +315,7 @@
 .phone-search:focus {
     outline: none;
     border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
 }
 
 /* Optional: Highlight matched numbers */
@@ -258,7 +324,24 @@
 }
 
 
-.chatarea{
+.chatarea {
     height: 400px;
     overflow: auto;
+}
+
+
+
+.patient-number {
+    transition: all 0.2s ease;
+}
+
+.patient-number.highlight {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+}
+
+.no-results-message {
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-align: center;
 }

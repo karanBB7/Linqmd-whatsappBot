@@ -1,63 +1,65 @@
-$(document).ready(function() {
+$(document).ready(function () {
     const API_BASE = 'http://localhost:3002';
     let dataTable;
     let allDoctors = [];
-    
 
-    // Utility Functions
+
+
+    
     const formatTimeAndDate = timestamp => {
         const now = new Date();
         const time = new Date(timestamp);
         const diffTime = Math.abs(now - time);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        
+
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         const dateStr = `${time.getDate()} ${months[time.getMonth()]} ${time.getFullYear()}`;
         const timeAgo = diffDays > 0 ? `${diffDays} day${diffDays > 1 ? 's' : ''} ago` :
-                       diffHours > 0 ? `${diffHours} hour${diffHours > 1 ? 's' : ''} ago` :
-                       'Just now';
-        
-        return { dateStr, timeAgo };
+            diffHours > 0 ? `${diffHours} hour${diffHours > 1 ? 's' : ''} ago` :
+            'Just now';
+
+        return {
+            dateStr,
+            timeAgo
+        };
     };
 
     const handleApiError = error => {
         console.error('API Error:', error);
         $('.chatarea').html('Error loading data: ' + error);
     };
-    
-    
-    
-    
-    
-function initDataTable() {
-    if (dataTable) {
-        dataTable.destroy();
-    }
-    
-    dataTable = $('#doctorTable').DataTable({
-        paging: false,
-        searching: false,  // Disable default searching
-        info: false,
-        order: [],
-        columnDefs: [{
-            targets: [0],
-            orderable: true
+
+
+
+
+
+    function initDataTable() {
+        if (dataTable) {
+            dataTable.destroy();
+        }
+
+        dataTable = $('#doctorTable').DataTable({
+            paging: false,
+            searching: false,
+            info: false,
+            order: [],
+            columnDefs: [{
+                targets: [0],
+                orderable: true
         }]
-    });
-}
+        });
+    }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
-    // Create row structure for each doctor
+
+
+
+
+
+
+
+
     function createDoctorRow(doctor) {
         return `
             <tr data-doctor-id="${doctor.uid}">
@@ -92,23 +94,25 @@ function initDataTable() {
                 </td>
                 <td class="chat-cell">
                     <div class="chatarea">
-                        Chat conversations are shown here
+                        Chat conversations
                     </div>
                 </td>
             </tr>
         `;
     }
 
-    // Load section numbers
+
+    
+    
     function loadList(doctorUid, url, container, emptyMessage, isCancelled = false, isAll = false) {
         const apiUrl = isAll ? url : `${url}${doctorUid}`;
-        
+
         $.ajax({
             url: apiUrl,
             method: 'GET',
-            success: function(response) {
+            success: function (response) {
                 container.empty();
-                
+
                 if (!response.data?.length && !response.numbers?.length && (!Array.isArray(response) || !response.length)) {
                     return;
                 }
@@ -126,39 +130,44 @@ function initDataTable() {
         });
     }
 
-    // Load all sections for a doctor row
+
+    
+    
+    
     function loadAllSections(doctorRow) {
         const doctorUid = doctorRow.data('doctor-id');
 
-        // Load Appointment Cancel numbers
-        loadList(doctorUid, `${API_BASE}/getCancled/`, 
-            doctorRow.find('.appt-cancel .patient-numbers-wrapper'), 
-            'No cancelled appointments found', 
+
+        loadList(doctorUid, `${API_BASE}/getCancled/`,
+            doctorRow.find('.appt-cancel .patient-numbers-wrapper'),
+            'No cancelled appointments found',
             true
         );
 
-        // Load Feedback numbers
-        loadList(doctorUid, `${API_BASE}/getFeedbackNumber/`, 
-            doctorRow.find('.feedback .patient-numbers-wrapper'), 
+
+        loadList(doctorUid, `${API_BASE}/getFeedbackNumber/`,
+            doctorRow.find('.feedback .patient-numbers-wrapper'),
             'No feedback numbers found'
         );
 
-        // Load Questions numbers
-        loadList(doctorUid, `${API_BASE}/getQandANumber/`, 
-            doctorRow.find('.questions .patient-numbers-wrapper'), 
+
+        loadList(doctorUid, `${API_BASE}/getQandANumber/`,
+            doctorRow.find('.questions .patient-numbers-wrapper'),
             'No numbers found'
         );
 
-        // Load Others numbers
-        loadList(doctorUid, `${API_BASE}/getPhone`, 
-            doctorRow.find('.others .patient-numbers-wrapper'), 
-            'No numbers found', 
-            false, 
+
+        loadList(doctorUid, `${API_BASE}/getPhone`,
+            doctorRow.find('.others .patient-numbers-wrapper'),
+            'No numbers found',
+            false,
             true
         );
     }
 
-    // Handle number clicks based on section
+
+    
+    
     function handleNumberClick(element) {
         const number = $(element).text().trim();
         const doctorRow = $(element).closest('tr');
@@ -166,17 +175,17 @@ function initDataTable() {
         const chatArea = doctorRow.find('.chatarea');
         const section = $(element).data('section');
 
-        // Get patient name
+
         $.ajax({
             url: `${API_BASE}/getName/${number}`,
             method: 'GET',
-            success: function(response) {
-                // Handle displaying name if needed
+            success: function (response) {
+
             }
         });
 
-        // Handle different sections
-        switch(section) {
+
+        switch (section) {
             case 'appt-cancel':
                 handleCancelDetails($(element).data('id'), chatArea);
                 break;
@@ -192,16 +201,21 @@ function initDataTable() {
         }
     }
 
-    // Handle specific chat types
+
+    
+    
     function handleFeedback(number, doctorUid, chatArea) {
         $.ajax({
             url: `${API_BASE}/getFeedback/${number}/${doctorUid}`,
             method: 'GET',
-            success: function(response) {
+            success: function (response) {
                 chatArea.empty();
                 response.feedbacks.forEach(feedback => {
                     if (feedback.rating || feedback.feedback || feedback.reasonForVisit) {
-                        const { dateStr, timeAgo } = formatTimeAndDate(feedback.timeStamp);
+                        const {
+                            dateStr,
+                            timeAgo
+                        } = formatTimeAndDate(feedback.timeStamp);
                         chatArea.append(`
                             <div class="feedbackWrapper">
                                 <div class="timestamp">
@@ -219,30 +233,56 @@ function initDataTable() {
             error: handleApiError
         });
     }
+    
+    
+    
 
     function handleQuestions(number, doctorUid, chatArea) {
         chatArea.empty().append('<div>Loading chat history...</div>');
-        
+
         $.when(
-            $.ajax({url: `${API_BASE}/getQuestion/${number}/${doctorUid}`, method: 'GET'}),
-            $.ajax({url: `${API_BASE}/getAnswer/${number}/${doctorUid}`, method: 'GET'})
-        ).then(function(questionResponse, answerResponse) {
+            $.ajax({
+                url: `${API_BASE}/getQuestion/${number}/${doctorUid}`,
+                method: 'GET'
+            }),
+            $.ajax({
+                url: `${API_BASE}/getAnswer/${number}/${doctorUid}`,
+                method: 'GET'
+            })
+        ).then(function (questionResponse, answerResponse) {
             const messages = [
-                ...questionResponse[0].data.map(q => ({type: 'question', text: q.question, time: new Date(q.timestamp)})),
-                ...answerResponse[0].data.map(a => ({type: 'answer', text: a.answer, time: new Date(a.timestamp)}))
+                ...questionResponse[0].data.map(q => ({
+                    type: 'question',
+                    text: q.question,
+                    time: new Date(q.timestamp)
+                })),
+                ...answerResponse[0].data.map(a => ({
+                    type: 'answer',
+                    text: a.answer,
+                    time: new Date(a.timestamp)
+                }))
             ].sort((a, b) => a.time - b.time);
 
             renderMessages(chatArea, messages);
         }).fail(handleApiError);
     }
+    
+    
+    
 
     function handleAllChat(number, chatArea) {
         chatArea.empty().append('<div>Loading chat history...</div>');
-        
+
         $.when(
-            $.ajax({url: `${API_BASE}/getSentChat/${number}`, method: 'GET'}),
-            $.ajax({url: `${API_BASE}/getReceivedChat/${number}`, method: 'GET'})
-        ).then(function(sentResponse, receivedResponse) {
+            $.ajax({
+                url: `${API_BASE}/getSentChat/${number}`,
+                method: 'GET'
+            }),
+            $.ajax({
+                url: `${API_BASE}/getReceivedChat/${number}`,
+                method: 'GET'
+            })
+        ).then(function (sentResponse, receivedResponse) {
             const messages = [
                 ...receivedResponse[0].data.map(r => ({
                     type: 'question',
@@ -260,15 +300,18 @@ function initDataTable() {
         }).fail(handleApiError);
     }
 
+    
+    
+    
     function handleCancelDetails(bookingId, chatArea) {
         $.ajax({
             url: `${API_BASE}/getCancledDetails/${bookingId}`,
             method: 'GET',
-            success: function(response) {
+            success: function (response) {
                 const booking = response[0];
                 const createdDateFormat = formatTimeAndDate(booking.created_date);
                 const bookingDateFormat = formatTimeAndDate(booking.booking_date);
-                
+
                 chatArea.empty().append(`
                     <div class="feedbackWrapper">
                         <div><span class="fw-bold fs-6">Booking Id: </span>${booking.id}</div>
@@ -288,6 +331,8 @@ function initDataTable() {
         });
     }
 
+    
+    
     function renderMessages($container, messages, addWrapper = false) {
         $container.empty();
         if (!messages.length) {
@@ -295,8 +340,8 @@ function initDataTable() {
             return;
         }
 
-        const $wrapper = addWrapper ? 
-            $container.append('<div class="chat-container"></div>').find('.chat-container') : 
+        const $wrapper = addWrapper ?
+            $container.append('<div class="chat-container"></div>').find('.chat-container') :
             $container;
 
         messages.forEach(msg => {
@@ -320,136 +365,127 @@ function initDataTable() {
             `);
         });
     }
+    
+    
+    
 
-    // Bind global events
+
     function bindEvents() {
-        // Patient number click handler
-        $('#doctorTableBody').on('click', '.patient-number', function() {
+        $('#doctorTableBody').on('click', '.patient-number', function () {
             $('.patient-number').removeClass('selected');
             $(this).addClass('selected');
             handleNumberClick(this);
         });
 
-        // Scroll handler for patient sections
-        $('#doctorTableBody').on('scroll', '.patient-numbers-wrapper', function(e) {
+        $('#doctorTableBody').on('scroll', '.patient-numbers-wrapper', function (e) {
             e.stopPropagation();
         });
     }
 
-    // Fetch and display doctors
+
+    
     
 
-function renderDoctors(doctors) {
-    const tbody = $('#doctorTableBody');
-    tbody.empty();
-    
-    doctors.forEach(doctor => {
-        const row = $(createDoctorRow(doctor));
-        tbody.append(row);
-        loadAllSections(row);
-    });
-    
-    // Reinitialize DataTable if it exists
-    if (dataTable) {
-        dataTable.clear();
-        dataTable.rows.add(tbody.find('tr'));
-        dataTable.draw();
+    function renderDoctors(doctors) {
+        const tbody = $('#doctorTableBody');
+        tbody.empty();
+
+        doctors.forEach(doctor => {
+            const row = $(createDoctorRow(doctor));
+            tbody.append(row);
+            loadAllSections(row);
+        });
+
+        if (dataTable) {
+            dataTable.clear();
+            dataTable.rows.add(tbody.find('tr'));
+            dataTable.draw();
+        }
     }
-}
-    // Add click handler for Doctor column header
+
+    
+    
     function setupDoctorColumnClick() {
-        $('#doctorTable thead th:first-child').off('click').on('click', function() {
+        $('#doctorTable thead th:first-child').off('click').on('click', function () {
             if (allDoctors.length > 0) {
-                // Take first doctor and move to end
                 const firstDoctor = allDoctors.shift();
                 allDoctors.push(firstDoctor);
-                
-                // Render doctors in new order
                 renderDoctors(allDoctors);
             }
         });
     }
 
-    // Fetch and display doctors
+
+    
     function fetchDoctors() {
         $.ajax({
             url: `${API_BASE}/users`,
             method: 'GET',
-            success: function(response) {
+            success: function (response) {
                 if (response.success && response.data.data) {
-                    // Store all doctors
                     allDoctors = response.data.data;
-                    
-                    // Initial render
                     renderDoctors(allDoctors);
-                    
-                    // Initialize DataTable after rendering
                     initDataTable();
-                    
-                    // Setup click handler
                     setupDoctorColumnClick();
                 }
             },
-            error: function(error) {
+            error: function (error) {
                 console.error('Error fetching doctors:', error);
                 const tbody = $('#doctorTableBody');
                 tbody.empty();
-                allDoctors = [{ username: 'Unknown', uid: 'unknown' }];
-                
+                allDoctors = [{
+                    username: 'Unknown',
+                    uid: 'unknown'
+                }];
+
                 renderDoctors(allDoctors);
                 initDataTable();
                 setupDoctorColumnClick();
             }
         });
     }
-    
-    
-    
-    
-    
+
+
+
 function setupPhoneSearch() {
     $('#phoneSearch').on('input', function() {
         const searchTerm = $(this).val().trim().toLowerCase();
         
-        // Clear highlights
         $('.patient-number').removeClass('highlight');
+        $('.chatarea').html('Chat conversations are shown here');
         
         if (!searchTerm) {
-            // Show all rows and numbers if search is empty
             $('#doctorTableBody tr').show();
             $('.patient-number').show();
-            $('.no-results-message').remove(); // Remove any existing "no results" message
+            $('.no-results-message').remove();
             return;
         }
 
-        // Remove any existing "no results" message
         $('.no-results-message').remove();
 
-        // Initially hide all rows
         $('#doctorTableBody tr').hide();
         
-        // Hide all numbers
         $('.patient-number').hide();
         
         let matchFound = false;
         
-        // Find matching numbers and show only them
         $('.patient-number').each(function() {
             const number = $(this).text().trim().toLowerCase();
             if (number.includes(searchTerm)) {
                 matchFound = true;
-                $(this).addClass('highlight').show();  // Show only matching number
-                $(this).closest('tr').show();         // Show containing row
+                $(this).addClass('highlight').show();  
+                $(this).closest('tr').show();         
             }
         });
 
         if (!matchFound) {
-            // Show "no results" message if no matches found
             $('#doctorTable').after(
                 `<div class="no-results-message alert alert-info mt-3">
                     No data found with the number "${searchTerm}"
                 </div>`
             );
+            // Ensure chat area is reset
+            $('.chatarea').html('Chat conversations are shown here');
         } else {
             // Show first match details
             const firstMatch = $('.patient-number.highlight').first();
@@ -466,38 +502,25 @@ function setupPhoneSearch() {
             }
         }
     });
+
+    // Also reset chat area when clicking outside of patient numbers
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.patient-number').length) {
+            $('.chatarea').html('Chat conversations are shown here');
+        }
+    });
 }
 
-// Add these styles to your CSS
-const styles = `
-.patient-number {
-    transition: all 0.2s ease;
-}
 
-.patient-number.highlight {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-}
 
-.no-results-message {
-    padding: 10px 15px;
-    border-radius: 4px;
-    text-align: center;
-}
-`;
+    function initialize() {
+        // Add styles
+        // Initialize components
+        fetchDoctors();
+        bindEvents();
+        setupPhoneSearch();
+    }
 
-function initialize() {
-    // Add styles
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = styles;
-    document.head.appendChild(styleSheet);
-
-    // Initialize components
-    fetchDoctors();
-    bindEvents();
-    setupPhoneSearch();
-}
-
-// Call initialize instead of individual functions
-initialize();
+    // Call initialize instead of individual functions
+    initialize();
 });

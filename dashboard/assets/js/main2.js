@@ -2,6 +2,7 @@ $(document).ready(function() {
     const API_BASE = 'http://localhost:3002';
     let dataTable;
     let allDoctors = [];
+    
 
     // Utility Functions
     const formatTimeAndDate = timestamp => {
@@ -390,9 +391,58 @@ function initDataTable() {
             }
         });
     }
+    
+    function setupPhoneSearch() {
+    $('#phoneSearch').on('input', function() {
+        const searchTerm = $(this).val().trim();
+        
+        // Clear highlight from all numbers
+        $('.patient-number').removeClass('highlight');
+        
+        if (!searchTerm) {
+            // If search is empty, ensure all numbers are visible
+            $('.patient-number').show();
+            return;
+        }
+        
+        // Find all matching numbers across all sections
+        const matchingNumbers = $('.patient-number').filter(function() {
+            const number = $(this).text().trim();
+            return number.includes(searchTerm);
+        });
+        
+        if (matchingNumbers.length > 0) {
+            // Hide all numbers initially
+            $('.patient-number').hide();
+            
+            // Show and highlight matching numbers
+            matchingNumbers.show().addClass('highlight');
+            
+            // If we have matches, scroll the first one into view
+            const firstMatch = matchingNumbers.first();
+            const container = firstMatch.closest('.patient-numbers-wrapper');
+            
+            if (container.length) {
+                container.scrollTop(
+                    firstMatch.position().top - container.position().top
+                );
+            }
+            
+            // Simulate click on first match to show details
+            firstMatch.trigger('click');
+        } else {
+            // If no matches, show all numbers
+            $('.patient-number').show();
+        }
+    });
+}
 
-
-    // Initialize
+function initialize() {
     fetchDoctors();
     bindEvents();
+    setupPhoneSearch();  // Add this line
+}
+
+// Call initialize instead of individual functions
+initialize();
 });

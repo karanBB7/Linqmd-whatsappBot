@@ -28,24 +28,34 @@ $(document).ready(function() {
     
     
     
+    
+    
 function initDataTable() {
-  function initDataTable() {
-        if (dataTable) {
-            dataTable.destroy();
-        }
-        
-        dataTable = $('#doctorTable').DataTable({
-            paging: false,
-            searching: false,
-            info: false,
-            order: [], // Disable initial sorting
-            columnDefs: [{
-                targets: [0], // Target the Doctor column
-                orderable: true
-            }]
-        });
+    if (dataTable) {
+        dataTable.destroy();
     }
+    
+    dataTable = $('#doctorTable').DataTable({
+        paging: false,
+        searching: false,  // Disable default searching
+        info: false,
+        order: [],
+        columnDefs: [{
+            targets: [0],
+            orderable: true
+        }]
+    });
 }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     // Create row structure for each doctor
     function createDoctorRow(doctor) {
@@ -328,23 +338,24 @@ function initDataTable() {
 
     // Fetch and display doctors
     
-    
-    function renderDoctors(doctors) {
-        const tbody = $('#doctorTableBody');
-        tbody.empty();
-        
-        doctors.forEach(doctor => {
-            const row = $(createDoctorRow(doctor));
-            tbody.append(row);
-            loadAllSections(row);
-        });
-        
-        // Redraw the table without sorting
-        if (dataTable) {
-            dataTable.draw(false);
-        }
-    }
 
+function renderDoctors(doctors) {
+    const tbody = $('#doctorTableBody');
+    tbody.empty();
+    
+    doctors.forEach(doctor => {
+        const row = $(createDoctorRow(doctor));
+        tbody.append(row);
+        loadAllSections(row);
+    });
+    
+    // Reinitialize DataTable if it exists
+    if (dataTable) {
+        dataTable.clear();
+        dataTable.rows.add(tbody.find('tr'));
+        dataTable.draw();
+    }
+}
     // Add click handler for Doctor column header
     function setupDoctorColumnClick() {
         $('#doctorTable thead th:first-child').off('click').on('click', function() {
@@ -392,55 +403,99 @@ function initDataTable() {
         });
     }
     
-    function setupPhoneSearch() {
+    
+    
+    
+    
+function setupPhoneSearch() {
     $('#phoneSearch').on('input', function() {
-        const searchTerm = $(this).val().trim();
+        const searchTerm = $(this).val().trim().toLowerCase();
         
-        // Clear highlight from all numbers
+        // Clear highlights
         $('.patient-number').removeClass('highlight');
         
         if (!searchTerm) {
-            // If search is empty, ensure all numbers are visible
+            // Show all rows and numbers if search is empty
+            $('#doctorTableBody tr').show();
             $('.patient-number').show();
+            $('.no-results-message').remove(); // Remove any existing "no results" message
             return;
         }
+
+        // Remove any existing "no results" message
+        $('.no-results-message').remove();
+
+        // Initially hide all rows
+        $('#doctorTableBody tr').hide();
         
-        // Find all matching numbers across all sections
-        const matchingNumbers = $('.patient-number').filter(function() {
-            const number = $(this).text().trim();
-            return number.includes(searchTerm);
-        });
+        // Hide all numbers
+        $('.patient-number').hide();
         
-        if (matchingNumbers.length > 0) {
-            // Hide all numbers initially
-            $('.patient-number').hide();
-            
-            // Show and highlight matching numbers
-            matchingNumbers.show().addClass('highlight');
-            
-            // If we have matches, scroll the first one into view
-            const firstMatch = matchingNumbers.first();
-            const container = firstMatch.closest('.patient-numbers-wrapper');
-            
-            if (container.length) {
-                container.scrollTop(
-                    firstMatch.position().top - container.position().top
-                );
+        let matchFound = false;
+        
+        // Find matching numbers and show only them
+        $('.patient-number').each(function() {
+            const number = $(this).text().trim().toLowerCase();
+            if (number.includes(searchTerm)) {
+                matchFound = true;
+                $(this).addClass('highlight').show();  // Show only matching number
+                $(this).closest('tr').show();         // Show containing row
             }
-            
-            // Simulate click on first match to show details
-            firstMatch.trigger('click');
+        });
+
+        if (!matchFound) {
+            // Show "no results" message if no matches found
+            $('#doctorTable').after(
+                `<div class="no-results-message alert alert-info mt-3">
+                    No data found with the number "${searchTerm}"
+                </div>`
+            );
         } else {
-            // If no matches, show all numbers
-            $('.patient-number').show();
+            // Show first match details
+            const firstMatch = $('.patient-number.highlight').first();
+            if (firstMatch.length) {
+                firstMatch.trigger('click');
+                
+                // Scroll to match
+                const container = firstMatch.closest('.patient-numbers-wrapper');
+                if (container.length) {
+                    container.scrollTop(
+                        firstMatch.position().top - container.position().top
+                    );
+                }
+            }
         }
     });
 }
 
+// Add these styles to your CSS
+const styles = `
+.patient-number {
+    transition: all 0.2s ease;
+}
+
+.patient-number.highlight {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+}
+
+.no-results-message {
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+`;
+
 function initialize() {
+    // Add styles
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = styles;
+    document.head.appendChild(styleSheet);
+
+    // Initialize components
     fetchDoctors();
     bindEvents();
-    setupPhoneSearch();  // Add this line
+    setupPhoneSearch();
 }
 
 // Call initialize instead of individual functions

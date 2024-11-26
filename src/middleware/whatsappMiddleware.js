@@ -1,6 +1,8 @@
 const axios = require('axios');
 const sqs = require('../config/sqs');
 
+const { insertMessageIntoDashboard, insertListMessageIntoDashboard } = require('../handllers/dashboardHandler.js');
+
 const WHATSAPP_API_URL = 'https://whatsappapi-79t7.onrender.com/send-text-message';
 const WHATSAPP_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJPd25lck5hbWUiOiJCaXp0ZWNobm9zeXMtbWlkd2FyZSIsInBob25lTnVtYmVySWQiOiIyNDg4OTg2NDQ5NzI0MDQiLCJ3aGF0c2FwcE1ldGFUb2tlbiI6IkVBQXhWMWc0dDI0UUJPd2ZBOGw1Q3d6Tm1qNUlvaHlWUkdaQWNKemRpTW9xb3hMWDZ1a3h3cVEzSDlGZVRHZUVuVmxaQkRhMXc0dUYxUzczUUk0OVkwTEpPQ1hJU0tTd2dBZkJnZ1N6dzNyUWlWSmtLRWt0Q0lMaTlqdzNRbUhXMmxnWFpBaXlwdXdaQ3FhSmRRaXBsb0M1SEtyYUx0ODZiSnVtSEt3RUFXNGthMGRaQlRPNWl4dWV1R1Ztb0daQ2JLbkZBUEEwVzkwWkNVR2dSZ29oIiwiaWF0IjoxNzA5MjAwMTEwfQ.ZMy9wpBxphJbpEOYI3bBchlywwKCIN23GJiYrDlvXyc';
 
@@ -18,6 +20,8 @@ async function sendWhatsAppMessage(phone, message) {
     console.error('Error queueing WhatsApp message:', error);
     throw error;
   }
+  await insertMessageIntoDashboard(phone, message);
+  
 }
 
 async function sendListMessage(phone, listMessage) {
@@ -48,6 +52,9 @@ async function sendListMessage(phone, listMessage) {
       }
     };
     await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'list' });
+
+    await insertListMessageIntoDashboard(phone,formattedListMessage)
+
   } catch (error) {
     console.error('Error queueing WhatsApp list message:', error);
     throw error;
@@ -83,6 +90,9 @@ async function sendFeedbackRating(phone, listMessage) {
       }
     };
     await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'list' });
+
+    await insertListMessageIntoDashboard(phone,formattedListMessage)
+
   } catch (error) {
     console.error('Error queueing WhatsApp list message:', error);
     throw error;
@@ -119,6 +129,9 @@ async function sendCancellationDatesList(phone, listMessage) {
       }
     };
     await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'cancellation_list' });
+
+    await insertListMessageIntoDashboard(phone,formattedListMessage)
+
     // console.log(`Cancellation dates list queued for sending to ${phone}`);
   } catch (error) {
     console.error('Error queueing WhatsApp cancellation dates list:', error);

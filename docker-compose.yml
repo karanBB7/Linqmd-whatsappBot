@@ -6,7 +6,7 @@ services:
     container_name: whatsappbot_app
     environment:
       - NODE_ENV=production
-      - DB_HOST=db
+      - DB_HOST=linqmd-whatsapp-bot.c16iememgraw.ap-south-1.rds.amazonaws.com
       - DB_USERNAME=postgres
       - DB_PASSWORD=linqmd-postgress
       - DB_DATABASE=whatsapptest

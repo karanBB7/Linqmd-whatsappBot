@@ -125,7 +125,7 @@ function getCancled(app) {
           if (!results || results.length === 0) {
             res.send(200, { message: "No data found" });
           } else {
-            res.send(200, results[0]); // Send only the first result object
+            res.send(200, results[0]); 
           }
           next();
         });

@@ -1,49 +1,58 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style2.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
-
 <body>
-    <div class="table-container">
-        <table id="doctorTable" class="custom-table">
-            <thead>
-                <tr>
-                    <th class="doc">Doctor
-                         <div class="search-cell-doctor">
-                            <input type="text" id="doctorSearch" class="doctor-search" placeholder="Doctor phone...">
-                        </div>
-                    </th>
-                    <th class="reason">Reason</th>
-                    <th class="patient">
-                        Patient
-                        <div class="search-cell">
-                            <input type="text" id="phoneSearch" class="phone-search" placeholder="Search phone...">
-                        </div>
-                    </th>
-                    <th class="chat">Chat</th>
-                </tr>
-            </thead>
-            <tbody id="doctorTableBody">
-            </tbody>
-        </table>
+    <div class="content-wrapper">
+        <div class="table-container col-sm-7">
+            <table id="doctorTable" class="custom-table">
+                <thead>
+                    <tr>
+                        <th class="doc">Doctor 
+                            <div class="search-cell-doctor">
+                                <input type="text" id="doctorSearch" class="doctor-search" placeholder="Search Doctor...">
+                            </div>
+                        </th>
+                        <th class="reason">Reason</th>
+                        <th class="patient">
+                            Patient
+                            <div class="search-cell">
+                                <input type="text" id="phoneSearch" class="phone-search" placeholder="Search phone...">
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="doctorTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="fixed-chat col-sm-5">
+            <div class="chat-header fw-bold"> <p class="text-center">Conversations / Details</p>
+                <div class="selected-doctor"></div>
+                <div class="chatnumber"></div>
+                <div class="patientName"></div>
+            </div>
+            <div class="chatarea">
+                Chat conversations
+            </div>
+        </div>
     </div>
-    
+
     <div id="loader" class="loader-overlay" style="display: none;">
-    <div class="loader-content">
-        <div class="spinner"></div>
-        <div class="loader-text">Loading...</div>
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading...</div>
+        </div>
     </div>
-</div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="assets/js/main2.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
-
 </html>

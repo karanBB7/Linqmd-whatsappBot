@@ -29,15 +29,15 @@ let incomingQueueUrl, outgoingQueueUrl;
 
 async function initializeSQS() {
   try {
-    incomingQueueUrl = await sqs.createQueue('incoming_messages_dev');
-    outgoingQueueUrl = await sqs.createQueue('outgoing_messages_dev');
+    incomingQueueUrl = await sqs.createQueue('incoming_messages');
+    outgoingQueueUrl = await sqs.createQueue('outgoing_messages');
     await startMessageConsumer(incomingQueueUrl);
     await startOutgoingMessageConsumer(outgoingQueueUrl);
     console.log('SQS initialized successfully');
   } catch (error) {
     console.error('Failed to initialize SQS:', error);
     console.log('Will retry SQS connection in 30 seconds...');
-    setTimeout(initializeSQS, 30000);
+    setTimeout(initializeSQS, 3000);
   }
 }
 
@@ -49,7 +49,7 @@ app.listen(3002, async () => {
     } catch (error) {
       console.error('Error processing pending messages:', error);
     }
-  }, 2000);
+  }, 200);
 
   initializeSQS();
 });

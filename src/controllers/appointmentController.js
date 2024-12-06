@@ -3,7 +3,7 @@ const { sendWhatsAppMessage} = require('../middleware/whatsappMiddleware');
 const { setUserState, getUserState, clearUserState } = require('../services/stateManager');
 
 
-const { handleInitialMessage, sendListAgain, sendYesOrNo } = require('../handllers/mainHandler.js');
+const { handleInitialMessage,handleFindDoctor, sendListAgain, sendYesOrNo } = require('../handllers/mainHandler.js');
 const { handleCancelAppointment, handleDropStatus } = require('../handllers/cancelHandler');
 const { handleViewAppointment } = require('../handllers/viewHandlers');
 const {  captureFeedback, captureReasonForVisit, captureOvercome, captureRating } = require('../handllers/feedbackHandler.js');
@@ -13,7 +13,7 @@ const { sendQuestion, sendAskAnything } = require('../handllers/questionAnswerHa
 
 const commandHandlers = {
   initial: (fromNumber, listid) => 
-    listid === null ? handleInitialMessage(fromNumber) : handleUnknownOption(fromNumber),
+    listid === null ? handleFindDoctor(fromNumber) : handleUnknownOption(fromNumber),
   
   questionAndAnswer: sendAskAnything,
 
@@ -70,6 +70,15 @@ const commandHandlers = {
     }
   },
 
+  awaitingDoctorSelection: async (fromNumber, description, listid) => {
+    if (description !== null) {
+        await handleInitialMessage(fromNumber, listid)
+      return;
+    } else {
+      return handleUnknownOption(fromNumber);
+    }
+  },
+
   awaitingYesNo: handleSelection
 };
 
@@ -78,14 +87,22 @@ const commandHandlers = {
 
 
 async function handleIncomingMessage(message) {
-  const { fromNumber, messages, listid } = message;
+  const { fromNumber, messages, listid, description } = message;
   const currentState = getUserState(fromNumber);
 
-  console.log(`${fromNumber}. Current state: ${currentState}, listid: ${listid}`);
+  if (messages && 
+    messages.toLowerCase().startsWith("hello!") && 
+    messages.length > "hello!".length) 
+    {
+      const extracted = messages.slice(6);  
+      console.log("extracted", extracted);
+      return;
+    }
+
 
   try {
     const handler = commandHandlers[currentState] || handleUnknownOption;
-    await handler(fromNumber, listid, messages);
+    await handler(fromNumber,description, listid);
   } catch (error) {
     console.error(`Error processing message for ${fromNumber}:`, error);
     await sendWhatsAppMessage(fromNumber, "Sorry, an error occurred. Please try again.");
@@ -93,36 +110,55 @@ async function handleIncomingMessage(message) {
   }
 }
 
-
-async function handleSelection(fromNumber, listid) {
+async function handleSelection(fromNumber, listid, description) {
   console.log(`Handling selection for ${fromNumber}. Selected option: ${listid}`);
-  if (listid === 'viewappointment') {
-    setUserState(fromNumber, 'viewingAppointment');
-    await handleViewAppointment(fromNumber);
-    await handleOther(fromNumber);
-  } else if (listid === 'cancelappointment') {
-    setUserState(fromNumber, 'cancellingAppointment');
-    await handleCancelAppointment(fromNumber);
-  } else if (listid === 'giveusyourfeedback') {
-    setUserState(fromNumber, 'giveusyourfeedback');
-    const token = getUserToken(fromNumber);
-    if(token){
-      await captureOvercome(fromNumber, token);
-    }else{
-      await handleUnknownOption(fromNumber);
-    }
-  } else if(listid === 'yes'){
-    await sendListAgain(fromNumber);
-  } else if(listid === 'no'){
-    await sendWhatsAppMessage(fromNumber, "Thank you for using our service. Have a great day!");
-    clearUserState(fromNumber);
-  } 
-  
+  if (listid === 'viewappointment')
+    {
+      setUserState(fromNumber, 'viewingAppointment');
+      await handleViewAppointment(fromNumber);
+      await handleOther(fromNumber);
+    } 
 
-  else if (listid === 'askquestion'){
-    setUserState(fromNumber, 'questionAndAnswer');
-    await sendAskAnything(fromNumber);
-  } 
+    else if (listid === 'cancelappointment') 
+    {
+      setUserState(fromNumber, 'cancellingAppointment');
+      await handleCancelAppointment(fromNumber);
+    }
+
+    else if (listid === 'giveusyourfeedback') 
+    {
+      setUserState(fromNumber, 'giveusyourfeedback');
+      const token = getUserToken(fromNumber);
+      if(token){
+        await captureOvercome(fromNumber, token);
+      }else{
+        await handleUnknownOption(fromNumber);
+      }
+    } 
+
+    else if(listid === 'yes')
+    {
+      await sendListAgain(fromNumber);
+    } 
+
+
+    else if(listid === 'no')
+    {
+      await sendWhatsAppMessage(fromNumber, "Thank you for using our service. Have a great day!");
+      clearUserState(fromNumber);
+    } 
+  
+    else if (listid === 'askquestion')
+      {
+        setUserState(fromNumber, 'questionAndAnswer');
+        await sendAskAnything(fromNumber);
+      } 
+
+    else if(description === 'Select Doctor')
+    {
+      // console.log("success");
+      
+    }
   
   
   

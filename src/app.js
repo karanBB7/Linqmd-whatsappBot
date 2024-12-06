@@ -1,7 +1,7 @@
 const restify = require('restify');
 const { sequelize } = require('../models');
 const appointmentRoutes = require('./routes/router');
-const { processAllPendingMessages, startMessageConsumer } = require('./services/messageService');
+const { startMessageConsumer } = require('./services/messageService');
 const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
 
@@ -42,15 +42,6 @@ async function initializeSQS() {
 }
 
 app.listen(3002, async () => {
-  
-  setInterval(async () => {
-    try {
-      await processAllPendingMessages();
-    } catch (error) {
-      console.error('Error processing pending messages:', error);
-    }
-  }, 2000);
-
   initializeSQS();
 });
 

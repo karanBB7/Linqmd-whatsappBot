@@ -99,6 +99,45 @@ async function sendFeedbackRating(phone, listMessage) {
   }
 }
 
+
+async function generalList(phone, listMessage) {
+  try {
+    const formattedListMessage = {
+      type: "interactive",
+      interactive: {
+        type: "list",
+        header: {
+          type: "text",
+          text: listMessage.title
+        },
+        body: {
+          text: listMessage.body
+        },
+        action: {
+          button: "Select",
+          sections: [
+            {
+              title: "Options",
+              rows: listMessage.options.map((option) => ({
+                id: option.id,
+                title: option.title,
+                description: option.description
+              }))
+            }
+          ]
+        }
+      }
+    };
+    await sqs.sendMessage(outgoingQueueUrl, { phone, message: formattedListMessage, type: 'list' });
+
+    await insertListMessageIntoDashboard(phone,formattedListMessage)
+
+  } catch (error) {
+    console.error('Error queueing WhatsApp list message:', error);
+    throw error;
+  }
+}
+
 async function sendCancellationDatesList(phone, listMessage) {
   try {
     // console.log(`Queueing WhatsApp cancellation dates list for ${phone}`);
@@ -202,6 +241,7 @@ module.exports = {
   sendWhatsAppMessage, 
   sendListMessage, 
   sendFeedbackRating,
-  sendCancellationDatesList, 
+  sendCancellationDatesList,
+  generalList,
   startOutgoingMessageConsumer 
 };

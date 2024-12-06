@@ -25,7 +25,8 @@
     "pg-hstore": "^2.3.4",
     "restify": "^11.1.0",
     "sequelize": "^6.37.3",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.2",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

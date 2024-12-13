@@ -1,6 +1,5 @@
 const restify = require('restify');
 const { sequelize } = require('../models');
-const appointmentRoutes = require('./routes/router');
 const { startMessageConsumer } = require('./services/messageService');
 const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
@@ -17,7 +16,6 @@ dashboard(app);
 getCancled(app);
 getFeedbackNumber(app);
 
-appointmentRoutes(app);
 
 sequelize.sync({ alter: true });
 

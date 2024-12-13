@@ -13,20 +13,18 @@ function createToken(fromNumber, uid, username, doctorname) {
 
 function decodeToken(token) {
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    return { 
-      username: decoded.username, 
-      fromNumber: decoded.fromNumber, 
-      docfullname: decoded.docfullname, 
-      booking_id: decoded.booking_id, 
-      doctor_user_id: decoded.doctor_user_id, 
-    };
+      const decoded = jwt.verify(token, SECRET_KEY);
+      return {
+          username: decoded.username,
+          fromNumber: decoded.fromNumber,
+          uid: decoded.uid,           
+          doctorname: decoded.doctorname 
+      };
   } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
+      console.error("Token decode error:", error);
+      throw error;
   }
 }
-
 
 const tokenStore = new Map();
 

@@ -2,38 +2,61 @@ const { decodeToken } = require('../middleware/tokenMiddleware');
 const { sendWhatsAppMessage, sendFeedbackRating } = require('../middleware/whatsappMiddleware');
 const { setUserState, clearUserState, getUserState } = require('../services/stateManager');
 const { initializeFeedback, updateFeedbackInProgress, getAllFeedbackForBooking } = require('../services/feedbackService');
+const { sendYesOrNo } = require('../utils/messageUtils');
+
+const { giveFeedback } = require('../services/drupalApiServices.js');
+
+const { getAppointmentRecords } = require('../services/drupalApiServices');
 
 const TIMEOUT_DURATION = 3600000; 
 
 async function captureOvercome(fromNumber, token) {
-  const decodedToken = decodeToken(token);
-  const doctorName = decodedToken.docfullname;
-  const username = decodedToken.username;
-  const booking_id = decodedToken.booking_id;
-  const doctor_user_id = decodedToken.doctor_user_id;
+    const decodedToken = decodeToken(token);
+    const { doctorname: doctorName, username, uid: doctor_user_id } = decodedToken;
+    const feedbackData = await giveFeedback(doctor_user_id, fromNumber);
+    if (feedbackData.status === 'success' && feedbackData.booking_id) {
+      await initializeFeedback(fromNumber, username, feedbackData.booking_id, doctor_user_id);
+      await updateFeedbackInProgress(fromNumber, 'doctorName', doctorName);
+    
+      const ratingOptions = {
+        title: 'Your Experience',
+        body: `Based on your experience, how likely are you to recommend ${doctorName} to others with conditions similar to yours:`,
+        options: [
+          { id: 'rating3', title: 'Definitely recommend', description: 'Definitely recommend' },
+          { id: 'rating2', title: 'Maybe', description: 'Maybe' },
+          { id: 'rating1', title: 'Never recommend', description: 'Never recommend' }
+        ]
+      };
 
-  initializeFeedback(fromNumber, username, booking_id, doctor_user_id);
-  await updateFeedbackInProgress(fromNumber, 'doctorName', doctorName);
+      await sendFeedbackRating(fromNumber, ratingOptions);
+      setUserState(fromNumber, 'captureRating');
+      
+      setTimeout(async () => {
+        if (getUserState(fromNumber) === 'captureRating') {
+          await sendWhatsAppMessage(fromNumber, "You didn't provide a rating within the time limit. The feedback process has been cancelled.");
+          clearUserState(fromNumber);
+        }
+      }, TIMEOUT_DURATION);
 
-  const ratingOptions = {
-    title: 'Your Experience',
-    body: `Based on your experience, how likely are you to recommend ${doctorName} to others with conditions similar to yours:`,
-    options: [
-      { id: 'rating3', title: 'Definitely recommend', description: 'Definitely recommend' },
-      { id: 'rating2', title: 'Maybe', description: 'Maybe' },
-      { id: 'rating1', title: 'Never recommend', description: 'Never recommend' }
-    ]
-  };
-  await sendFeedbackRating(fromNumber, ratingOptions);
-  setUserState(fromNumber, 'captureRating');
-  
-  setTimeout(async () => {
-    if (getUserState(fromNumber) === 'captureRating') {
-      await sendWhatsAppMessage(fromNumber, "You didn't provide a rating within the time limit. The feedback process has been cancelled.");
-      clearUserState(fromNumber);
+    } else {
+
+      const appointmentData = await getAppointmentRecords(fromNumber);
+
+      if ('message' in appointmentData) {
+          await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't find any appointments for you.");
+          clearUserState(fromNumber);
+          return;
+      }else{
+        await sendWhatsAppMessage(fromNumber, "You are allowed to give feedback within 30 days. Thank you.");
+        await sendYesOrNo(fromNumber);
+      }
+
+
     }
-  }, TIMEOUT_DURATION);
+  
 }
+
+
 
 async function captureRating(fromNumber, listid) {
   const ratingMap = {

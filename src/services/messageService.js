@@ -1,6 +1,6 @@
 require('dotenv').config(); 
 const WebSocket = require('ws');
-const { handleIncomingMessage } = require('../controllers/appointmentController');
+const { handleIncomingMessage } = require('../controllers/botController');
 const sqs = require('../config/sqs');
 
 let incomingQueueUrl;

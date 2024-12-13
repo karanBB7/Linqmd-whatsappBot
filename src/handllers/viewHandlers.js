@@ -1,11 +1,20 @@
 const { DateTime } = require('luxon');
 const { sendWhatsAppMessage, sendListMessage } = require('../middleware/whatsappMiddleware');
-const { viewAppointment } = require('../services/viewService');
+const { viewAppointment, getAppointment } = require('../services/drupalApiServices');
 const { clearUserState } = require('../services/stateManager');
+const { decodeToken } = require('../middleware/tokenMiddleware');
 
-  async function handleViewAppointment(fromNumber) {
+
+  async function handleViewAppointment(fromNumber, token) {
+
+
     try {
-      const appointmentData = await viewAppointment(fromNumber);
+
+      const decodedToken = decodeToken(token);
+      const doc_id = decodedToken.uid;  
+
+
+      const appointmentData = await getAppointment(doc_id, fromNumber);
       // console.log('View Appointment Response:', appointmentData);
   
       let message = '';

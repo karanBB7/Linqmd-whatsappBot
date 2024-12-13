@@ -25,7 +25,7 @@ async function getUser(){
           return response.data;
           
     }catch(error){
-        console.log("Error while getting User", error);
+        console.error("Error while getting User", error);
     }
 }
 

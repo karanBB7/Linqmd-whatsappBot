@@ -3,7 +3,7 @@ const { setUserState} = require('../services/stateManager');
 const { sendListMessage, generalList } = require('../middleware/whatsappMiddleware');
 
 async function sendYesOrNo(fromNumber){
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
       const listMessage = {
         title: 'Do you have anything else?',
         body: 'Please select the respective activity.',
@@ -15,7 +15,7 @@ async function sendYesOrNo(fromNumber){
 
 
   async function sendAllServices(fromNumber){
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     const listMessage = {
       title: "Do you want to?",
       body: "Please select the respective activity.",

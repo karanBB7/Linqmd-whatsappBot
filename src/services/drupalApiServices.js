@@ -151,7 +151,6 @@ async function getCancelBookings(uid, phone) {
       })
     });
 
-    console.log("reached near api", response.data);
     return response.data || { message: 'No records found' };
   } catch (error) {
     console.error('Error getting appointment records:', error.message);

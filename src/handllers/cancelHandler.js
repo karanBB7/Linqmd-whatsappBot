@@ -1,12 +1,17 @@
 const { DateTime } = require('luxon'); 
 const { setUserState, clearUserState } = require('../services/stateManager');
 const { sendWhatsAppMessage, sendCancellationDatesList } = require('../middleware/whatsappMiddleware');
-const { getDatesToDrop, dropDates } = require('../services/cancelService');
+const { decodeToken } = require('../middleware/tokenMiddleware');
 
-async function handleCancelAppointment(fromNumber) {
-  console.log(`Entering handleCancelAppointment for ${fromNumber}`);
+const { getCancelBookings, cancelBooking} = require('../services/drupalApiServices');
+
+async function handleCancelAppointment(fromNumber, token) {
   try {
-    const datesToDrop = await getDatesToDrop(fromNumber);
+    const decodedToken = decodeToken(token);
+    const doc_id = decodedToken.uid;  
+
+
+    const datesToDrop = await getCancelBookings(doc_id,fromNumber);
     console.log('Dates to drop:', JSON.stringify(datesToDrop, null, 2));
 
     if (datesToDrop.status === "error") {
@@ -17,20 +22,20 @@ async function handleCancelAppointment(fromNumber) {
     }
 
     if (!datesToDrop.booking_date || typeof datesToDrop.booking_date !== 'object') {
-      console.error('Invalid datesToDrop format:', datesToDrop);
+      // console.error('Invalid datesToDrop format:', datesToDrop);
       await sendWhatsAppMessage(fromNumber, "Sorry, we couldn't retrieve your appointments. Please try again later.");
       clearUserState(fromNumber);
       return;
     }
 
     if (Object.keys(datesToDrop.booking_date).length === 0) {
-      console.log(`No appointments to cancel for ${fromNumber}`);
+      // console.log(`No appointments to cancel for ${fromNumber}`);
       await sendWhatsAppMessage(fromNumber, "You don't have any appointments that can be cancelled at this time.");
       clearUserState(fromNumber);
       return;
     }
 
-    console.log(`Sending dates to cancel for ${fromNumber}`);
+    // console.log(`Sending dates to cancel for ${fromNumber}`);
     await sendDatesToCancel(fromNumber, datesToDrop);
     setUserState(fromNumber, 'awaitingCancellationConfirmation');
   } catch (error) {
@@ -92,9 +97,12 @@ async function sendDatesToCancel(fromNumber, datesToDrop) {
 
 
 
-async function handleDropStatus(fromNumber, bookingDateId) {
+async function handleDropStatus(fromNumber, bookingDateId, token) {
   try {
-    const dropStatus = await dropDates(fromNumber, bookingDateId);
+    const decodedToken = decodeToken(token);
+    const doc_id = decodedToken.uid;  
+
+    const dropStatus = await cancelBooking(doc_id, fromNumber, bookingDateId);
     let message;
     if (dropStatus.status === "success" || dropStatus.status === "sucess") {
       message = `\n${dropStatus.message}\n`;

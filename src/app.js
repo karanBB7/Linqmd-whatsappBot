@@ -1,33 +1,39 @@
 const restify = require('restify');
+const initializeSentry = require('./sentryConfig');
 const { sequelize } = require('../models');
-const appointmentRoutes = require('./routes/router');
-const { processAllPendingMessages, startMessageConsumer } = require('./services/messageService');
+const { startMessageConsumer } = require('./services/messageService.js');
 const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
-
 const { users, dashboard } = require('./routes/dashboardRouter.js');
 const { getCancled, getFeedbackNumber } = require('./routes/dashboardQuery.js');
+require('dotenv').config();
+
+const sentry = initializeSentry();
 
 const app = restify.createServer();
 
-app.use(restify.plugins.bodyParser());
+app.use((req, res, next) => {
+  const transaction = sentry.createTransaction(`${req.method} ${req.url}`, 'http.request');
+  
+  res.once('finish', () => {
+    transaction.setHttpStatus(res.statusCode);
+    transaction.finish();
+  });
 
+  next();
+});
+
+app.use(restify.plugins.bodyParser());
 users(app);
 dashboard(app);
 getCancled(app);
 getFeedbackNumber(app);
-
-appointmentRoutes(app);
-
 sequelize.sync({ alter: true });
-
-app.get('/health', (req, res, next) => {
-  res.send(200, { status: 'OK' });
-});
 
 let incomingQueueUrl, outgoingQueueUrl;
 
 async function initializeSQS() {
+  const transaction = sentry.createTransaction('initialize_sqs', 'sqs');
   try {
     incomingQueueUrl = await sqs.createQueue('incoming_messages_dev');
     outgoingQueueUrl = await sqs.createQueue('outgoing_messages_dev');
@@ -36,22 +42,27 @@ async function initializeSQS() {
     console.log('SQS initialized successfully');
   } catch (error) {
     console.error('Failed to initialize SQS:', error);
-    console.log('Will retry SQS connection in 30 seconds...');
     setTimeout(initializeSQS, 30000);
+  } finally {
+    transaction.finish();
   }
 }
 
 app.listen(3002, async () => {
-  
-  setInterval(async () => {
-    try {
-      await processAllPendingMessages();
-    } catch (error) {
-      console.error('Error processing pending messages:', error);
-    }
-  }, 2000);
+  const transaction = sentry.createTransaction('server_start', 'server');
+  try {
+    await initializeSQS();
+  } finally {
+    transaction.finish();
+  }
+});
 
-  initializeSQS();
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
 });
 
 module.exports = app;

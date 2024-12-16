@@ -1,6 +1,6 @@
 const { sendWhatsAppMessage } = require('../middleware/whatsappMiddleware');
 const { getAnaswer } = require('../services/questionAnswerApiService.js');
-const { setUserState } = require('../services/stateManager');
+const { setUserState, clearUserState } = require('../services/stateManager');
 const { sendYesOrNo } = require('../utils/messageUtils.js')
 const { decodeToken } = require('../middleware/tokenMiddleware');
 
@@ -16,6 +16,7 @@ async function sendAskAnything(fromNumber) {
         setUserState(fromNumber, 'getQuestion');
     } catch(error) {
         console.error('Error in handlesendQuestion:', error);
+        clearUserState(fromNumber);
     }
 }
 
@@ -54,6 +55,7 @@ async function sendQuestion(fromNumber, messages, token) {
     } catch(error) {
         console.error('Error in sendQuestion:', error);
         await sendWhatsAppMessage(fromNumber, "An error occurred. Please try again.");
+        clearUserState(fromNumber);
     }
 }
 

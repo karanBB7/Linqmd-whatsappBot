@@ -9,6 +9,7 @@ RUN npm install aws-sdk
 
 COPY . .
 
-EXPOSE 3002
+# We'll use an environment variable to determine which app to run
+EXPOSE 3002 3005
 
-CMD [ "node", "src/app.js" ]
+CMD [ "sh", "-c", "node src/${APP_FILE}" ]

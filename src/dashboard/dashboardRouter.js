@@ -1,18 +1,18 @@
 const path = require('path');
 const restify = require('restify');
-const { getUser } = require('../services/dashboardService.js');
+const { getUser } = require('./dashboardService');
 
 function dashboard(app) {
   app.get('/dashboard', (req, res, next) => {
       res.writeHead(200, {
           'Content-Type': 'text/html'
       });
-      const indexPath = path.join(__dirname, '../../dashboard/index.html');
+      const indexPath = path.join(__dirname, './web/index.html');
       require('fs').createReadStream(indexPath).pipe(res);
   });
 
   app.get('/assets/*', restify.plugins.serveStatic({
-      directory: path.join(__dirname, '../../dashboard')
+      directory: path.join(__dirname, './web')
   }));
 }
 

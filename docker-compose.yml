@@ -6,20 +6,45 @@ services:
     container_name: whatsappbot_app
     environment:
       - NODE_ENV=production
-      - DB_HOST=linqmd-whatsapp-bot.c16iememgraw.ap-south-1.rds.amazonaws.com
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=linqmd-postgress
-      - DB_DATABASE=whatsapptest
+      - DB_HOST=${DB_HOST}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
       - DB_DIALECT=postgres
       - DB_SSL=true
       - DB_SSL_REJECT_UNAUTHORIZED=false
-      - AWS_ACCESS_KEY_ID=your_aws_access_key_id
-      - AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-      - AWS_REGION=your_aws_region
-      - SQS_INCOMING_QUEUE_URL=https://sqs.your-region.amazonaws.com/your-account-id/incoming_messages
-      - SQS_OUTGOING_QUEUE_URL=https://sqs.your-region.amazonaws.com/your-account-id/outgoing_messages
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - SQS_INCOMING_QUEUE_URL=${SQS_INCOMING_QUEUE_URL}
+      - SQS_OUTGOING_QUEUE_URL=${SQS_OUTGOING_QUEUE_URL}
+      - APP_FILE=app.js
+      - WS_AUTH_TOKEN=${WS_AUTH_TOKEN}
+      - WS_SERVER_URL=${WS_SERVER_URL}
     ports:
       - "3002:3002"
+    depends_on:
+      db:
+        condition: service_started
+    networks:
+      - whatsappbot_network
+    restart: on-failure
+
+  dashboard:
+    build: .
+    container_name: whatsappbot_dashboard
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_DIALECT=postgres
+      - DB_SSL=true
+      - DB_SSL_REJECT_UNAUTHORIZED=false
+      - APP_FILE=dashboard.js
+    ports:
+      - "3005:3005"
     depends_on:
       db:
         condition: service_started
@@ -32,9 +57,9 @@ services:
     container_name: whatsappbot_db
     command: -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: linqmd-postgress
-      POSTGRES_DB: whatsapptest
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "5432:5432"
     volumes:

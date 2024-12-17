@@ -206,7 +206,7 @@ async function processOutgoingMessage(messageData) {
         }
       });
     }
-    console.log(`Message sent successfully to ${phone}`);
+    // console.log(`Message sent successfully to ${phone}`);
   } catch (error) {
     console.error('Error sending WhatsApp message:', error);
     throw error;
@@ -215,7 +215,7 @@ async function processOutgoingMessage(messageData) {
 
 async function startOutgoingMessageConsumer(queueUrl) {
   outgoingQueueUrl = queueUrl;
-  console.log('Starting outgoing message consumer...');
+  // console.log('Starting outgoing message consumer...');
   consumeOutgoingMessages();
 }
 
@@ -233,7 +233,6 @@ async function consumeOutgoingMessages() {
     console.error('Error consuming outgoing message:', error);
   }
   
-  // Continue polling for messages
   setImmediate(consumeOutgoingMessages);
 }
 

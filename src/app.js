@@ -4,8 +4,7 @@ const { sequelize } = require('../models');
 const { startMessageConsumer } = require('./services/messageService.js');
 const sqs = require('./config/sqs');
 const { startOutgoingMessageConsumer } = require('./middleware/whatsappMiddleware');
-const { users, dashboard } = require('./routes/dashboardRouter.js');
-const { getCancled, getFeedbackNumber } = require('./routes/dashboardQuery.js');
+
 require('dotenv').config();
 
 const sentry = initializeSentry();
@@ -24,10 +23,7 @@ app.use((req, res, next) => {
 });
 
 app.use(restify.plugins.bodyParser());
-users(app);
-dashboard(app);
-getCancled(app);
-getFeedbackNumber(app);
+
 sequelize.sync({ alter: true });
 
 let incomingQueueUrl, outgoingQueueUrl;
@@ -64,5 +60,9 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
 });
+
+
+process.removeAllListeners('warning');
+require('events').EventEmitter.defaultMaxListeners = 15;
 
 module.exports = app;

@@ -1,13 +1,13 @@
-require('dotenv').config(); 
-const AWS = require('aws-sdk');
+require('dotenv').config();
+const { SQSClient, CreateQueueCommand, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 
-AWS.config.update({
+const sqsClient = new SQSClient({
   region: process.env.region,
-  accessKeyId: process.env.accessKeyId,
-  secretAccessKey: process.env.secretAccessKey
+  credentials: {
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey
+  }
 });
-
-const sqs = new AWS.SQS();
 
 async function createQueue(queueName) {
   const params = {
@@ -19,8 +19,12 @@ async function createQueue(queueName) {
   };
 
   try {
-    const data = await sqs.createQueue(params).promise();
-    console.log(`Queue ${queueName} created or confirmed, URL: ${data.QueueUrl}`);
+    const data = await sqsClient.send(new CreateQueueCommand(params));
+
+//que connection main log
+    // console.log(`Queue ${queueName} created or confirmed, URL: ${data.QueueUrl}`);
+    
+    
     return data.QueueUrl;
   } catch (error) {
     console.error(`Error creating queue ${queueName}:`, error);
@@ -35,8 +39,11 @@ async function sendMessage(queueUrl, message) {
   };
 
   try {
-    await sqs.sendMessage(params).promise();
-    console.log(`Message sent to queue ${queueUrl}`);
+    await sqsClient.send(new SendMessageCommand(params));
+
+    // console.log(`Message sent to queue ${queueUrl}`);
+
+
   } catch (error) {
     console.error(`Error sending message to queue ${queueUrl}:`, error);
     throw error;
@@ -52,7 +59,7 @@ async function receiveMessage(queueUrl) {
   };
 
   try {
-    const data = await sqs.receiveMessage(params).promise();
+    const data = await sqsClient.send(new ReceiveMessageCommand(params));
     if (data.Messages && data.Messages.length > 0) {
       const message = data.Messages[0];
       const content = JSON.parse(message.Body);
@@ -72,8 +79,7 @@ async function deleteMessage(queueUrl, receiptHandle) {
   };
 
   try {
-    await sqs.deleteMessage(params).promise();
-    // console.log(`Message deleted from queue ${queueUrl}`);
+    await sqsClient.send(new DeleteMessageCommand(params));
   } catch (error) {
     console.error(`Error deleting message from queue ${queueUrl}:`, error);
     throw error;

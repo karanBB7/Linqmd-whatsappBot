@@ -2,7 +2,7 @@ const axios = require('axios');
 const https = require('https');
 
 
-const API_DOMAIN = 'http://13.235.8.91/api';
+const API_DOMAIN = 'http://localhost/linqmd/api';
 const API_AUTH = 'Basic bGlucW1kOlNAaVBrSG1GU2FpOXo=';
 
 const API_URL_records = `${API_DOMAIN}/getRecords`;

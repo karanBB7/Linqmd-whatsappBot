@@ -27,7 +27,6 @@ function setupWebSocket() {
 
     const WS_SERVER_URL = process.env.WS_SERVER_URL;
     
-    // Safely close existing connection if any
     if (ws && ws.readyState !== WebSocket.CLOSED) {
         try {
             ws.close();
@@ -109,7 +108,7 @@ async function processMessage(messageContent) {
 
         await handleIncomingMessage(message);
         
-        console.log(`Successfully processed message for ${message.fromNumber}`);
+        // console.log(`Successfully processed message for ${message.fromNumber}`);
         return true;
     } catch (error) {
         console.error('Process message error:', error);

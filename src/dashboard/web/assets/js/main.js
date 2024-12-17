@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    const API_BASE = 'http://localhost:3002';
+    const API_BASE = 'http://localhost:3005';
     let dataTable;
     let allDoctors = [];
 
@@ -67,11 +67,6 @@ $(document).ready(function () {
         }]
         });
     }
-
-
-
-
-
 
 
 
